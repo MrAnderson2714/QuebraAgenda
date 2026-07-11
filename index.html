@@ -13,7 +13,7 @@
 :root{--claro-red:#DA291C;--claro-red-dark:#AF272F;--claro-gray:#A7A8AA;--claro-ink:#2D291C;--claro-teal:#0097A9;--claro-orange:#F5842B;--bg:#f5f6f8;--card:#fff;--line:#e2e6ea;--good:#22863a;--warn:#b88200;--bad:#cf222e;--muted:#6b7280}
 *{box-sizing:border-box} body{margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg);color:var(--claro-ink)}
 .topbar{background:linear-gradient(90deg,var(--claro-red),var(--claro-red-dark));color:#fff;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.12)}
-.topbar h1{margin:0;font-size:22px}.subtitle{font-size:11px;opacity:.94;margin-top:2px}.topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}.badge{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);padding:7px 10px;border-radius:999px;font-size:11px}.btn{border:none;padding:8px 10px;background:#fff;color:var(--claro-red);border-radius:10px;font-weight:700;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.08);font-size:12px}.btn.secondary{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25)}
+.topbar h1{margin:0;font-size:22px}.subtitle{font-size:11px;opacity:.94;margin-top:2px}.topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}.badge{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);padding:7px 10px;border-radius:999px;font-size:11px}.sync-badge{font-weight:700}.sync-pending{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.22);color:#fff}.sync-ok{background:rgba(34,134,58,.18);border-color:rgba(255,255,255,.32);color:#fff}.sync-error{background:rgba(207,34,46,.22);border-color:rgba(255,255,255,.34);color:#fff}.btn{border:none;padding:8px 10px;background:#fff;color:var(--claro-red);border-radius:10px;font-weight:700;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.08);font-size:12px}.btn.secondary{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25)}
 .wrap{display:grid;grid-template-columns:290px 1fr;gap:10px;padding:10px;min-height:calc(100vh - 66px)}.sidebar,.panel,.card{background:var(--card);border:1px solid var(--line);border-radius:14px}.sidebar{padding:10px;overflow:auto}.panel{padding:10px}.main{display:flex;flex-direction:column;gap:10px;min-width:0}
 .section-title{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700;margin:0 0 6px}.filters{display:grid;gap:7px}.filter-group label{display:block;font-size:11px;font-weight:700;margin-bottom:3px;color:#374151}.filter-group select,.filter-group input,.table-toolbar input{width:100%;padding:7px 9px;border:1px solid #d1d5db;border-radius:10px;background:#fff;color:#111827;font-size:12px}.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;min-height:24px}.chip{background:#fff5f4;color:var(--claro-red-dark);border:1px solid #ffd2cd;padding:3px 7px;border-radius:999px;font-size:10px}.small-note,.helper,.footnote{font-size:10px;color:var(--muted);line-height:1.3}.status-box{margin-top:10px;border:1px dashed #d1d5db;border-radius:12px;padding:8px;font-size:11px;color:#374151;background:#fafafa}
 .cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.card{padding:10px;min-height:78px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 1px 1px rgba(0,0,0,.02)}.card .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}.card .value{font-size:24px;font-weight:800;line-height:1.02;margin-top:6px}.card .sub{font-size:11px;color:var(--muted);margin-top:4px}.good{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}
@@ -21,7 +21,7 @@
 .pareto-bars{display:flex;flex-direction:column;gap:7px;padding-top:2px}.bar-row{display:grid;grid-template-columns:88px 1fr auto;gap:7px;align-items:center;font-size:11px}.bar-label{font-weight:700;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bar-track{height:20px;background:#f1f3f5;border-radius:999px;position:relative;overflow:hidden;border:1px solid #e5e7eb}.bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--claro-red),var(--claro-orange));position:relative}.bar-fill span{position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#fff;font-weight:700;font-size:10px;text-shadow:0 1px 0 rgba(0,0,0,.18)}.bar-value{font-weight:700;color:#111827;min-width:66px;text-align:right}
 .table-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;align-items:center}.table-wrap{max-height:246px;overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse;font-size:11px;background:#fff}thead th{position:sticky;top:0;background:#fff8f7;z-index:1;border-bottom:1px solid #e5e7eb;color:#7c2d12;text-align:left;padding:7px 7px;cursor:pointer;white-space:nowrap}tbody td{border-bottom:1px solid #f0f2f4;padding:5px 7px;line-height:1.15}tbody tr:hover{background:#fffaf9}.align-right{text-align:right}.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 7px;border-radius:999px;font-weight:700;font-size:10px}.pill.good{background:#e9f7ee;color:#19713b}.pill.warn{background:#fff6da;color:#8a6a00}.pill.bad{background:#fceceb;color:#b42318}
 .pr-box{min-height:246px}.summary{background:#fff8f7;border:1px solid #ffd9d3;padding:10px;border-radius:12px;font-size:12px;line-height:1.38;margin-bottom:9px}.bullet-list{margin:0;padding-left:18px;display:grid;gap:8px}.color-good{color:var(--good);font-weight:700}.color-warn{color:var(--warn);font-weight:700}.color-bad{color:var(--bad);font-weight:700}
-@media (max-width:1400px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.grid-bottom,.grid-2{grid-template-columns:1fr}} @media (max-width:1100px){.wrap{grid-template-columns:1fr}.topbar{position:static}} @media (max-width:640px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.topbar h1{font-size:18px}.topbar-right{justify-content:flex-start}}
+@media (max-width:1400px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.grid-bottom,.grid-2{grid-template-columns:1fr}} @media (max-width:1100px){.wrap{grid-template-columns:1fr}.topbar{position:static}} @media (max-width:640px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.topbar h1{font-size:18px}.topbar-right{justify-content:flex-start}.badge{width:100%;border-radius:12px}}
 </style>
 </head>
 <body>
@@ -33,9 +33,9 @@
   <div class="topbar-right">
     <div class="badge" id="badgePeriodo">Período: --</div>
     <div class="badge" id="badgeAtualizacao">Atualização: --</div>
+    <div class="badge sync-badge sync-pending" id="badgeSyncStatus">Sincronização: aguardando</div>
+    <div class="badge" id="badgeSyncTime">Última sincronização: --</div>
     <button class="btn secondary" id="btnReloadEmbedded">Atualizar do repositório</button>
-    <label class="btn" for="fileInput">Substituir Excel local</label>
-    <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" />
     <button class="btn" id="btnExportPng">Exportar PNG</button>
     <button class="btn" id="btnSaveHtml">Baixar HTML</button>
   </div>
@@ -47,8 +47,8 @@
     <div class="section-title" style="margin-top:10px">Filtros ativos</div>
     <div class="chips" id="activeChips"></div>
     <button class="btn" id="btnClearFilters" style="width:100%;margin-top:6px">Limpar filtros</button>
-    <div class="small-note">Versão 3.0 compacta: leitura automática do arquivo <strong>IND_QUEBRA.xlsx</strong> publicado no mesmo repositório do GitHub, com atualização ao recarregar a página, ao voltar para a aba e por verificação periódica.</div>
-    <div class="status-box" id="statusBox">Aguardando leitura automática do arquivo do repositório...</div>
+    <div class="small-note">Versão 3.0 compacta: leitura automática do arquivo <strong>IND_QUEBRA.xlsx</strong> publicado no mesmo repositório do GitHub. Para atualizar permanentemente o dashboard, substitua esse Excel no repositório e publique o commit.</div>
+    <div class="status-box" id="statusBox">Aguardando leitura automática do arquivo do repositório e atualização do indicador de sincronização...</div>
   </aside>
   <main class="main">
     <section class="cards">
@@ -125,8 +125,8 @@ const FILTERS=[
   {key:'canal_grupo',label:'Canal Grupo',type:'single'}
 ];
 const DEFAULT_FILTERS={grupo:'Todos',uf:'Todos',cluster:'Todos',cidade:'Todos',anomes:'Todos',grupo_os:'Todos',tipo_os:'Todos',novo_domicilio:'Todos',grupo_canais:'Todos',canal_grupo:'Todos'};
-const state={rows:EMBEDDED_ROWS,filters:{...DEFAULT_FILTERS},sort:{key:'indicador',dir:'desc'},search:'',baseLabel:'Aguardando arquivo do repositório',rawWorkbookBase64:EMBEDDED_XLSX_BASE64,lastRepoCheck:'',lastLoadedHash:''};
-const fmtInt=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:0}), fmtPct=new Intl.NumberFormat('pt-BR',{style:'percent',minimumFractionDigits:1,maximumFractionDigits:1}), fmtDate=new Intl.DateTimeFormat('pt-BR');
+const state={rows:EMBEDDED_ROWS,filters:{...DEFAULT_FILTERS},sort:{key:'indicador',dir:'desc'},search:'',baseLabel:'Aguardando arquivo do repositório',rawWorkbookBase64:EMBEDDED_XLSX_BASE64,lastRepoCheck:'',lastLoadedHash:'',lastSyncStatus:'pending',lastSyncSuccess:'',lastSyncAttempt:'',lastSyncError:''};
+const fmtInt=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:0}), fmtPct=new Intl.NumberFormat('pt-BR',{style:'percent',minimumFractionDigits:1,maximumFractionDigits:1}), fmtDate=new Intl.DateTimeFormat('pt-BR'), fmtDateTime=new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'medium'});
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function num(v){if(v==null||v==='') return 0; if(typeof v==='number') return Number.isFinite(v)?v:0; const x=String(v).replace(/\./g,'').replace(',','.'); const n=Number(x); return Number.isFinite(n)?n:0}
 function uniq(arr){return Array.from(new Set(arr.filter(v=>v!=null&&v!==''))).sort((a,b)=>String(a).localeCompare(String(b),'pt-BR'))}
@@ -136,7 +136,35 @@ function checklistClass(rate){return rate>=0.80?'good':rate>=0.70?'warn':'bad'}
 function rateText(rate){return rate<=0.20?'Dentro da meta':rate<=0.25?'Atenção':'Crítico'}
 function checklistText(rate){return rate>=0.80?'Aderência saudável':rate>=0.70?'Aderência em atenção':'Baixa aderência'}
 function deltaText(delta){const signal=delta>0?'+':''; return signal+(delta*100).toFixed(1).replace('.',',')+' p.p.'}
+
+function formatSyncDateTime(v){
+  if(!v) return '--';
+  const d = v instanceof Date ? v : new Date(v);
+  return isNaN(d) ? '--' : fmtDateTime.format(d);
+}
+function updateSyncIndicator(){
+  const badgeStatus=document.getElementById('badgeSyncStatus');
+  const badgeTime=document.getElementById('badgeSyncTime');
+  if(!badgeStatus||!badgeTime) return;
+  let text='Sincronização: aguardando';
+  badgeStatus.className='badge sync-badge sync-pending';
+  if(state.lastSyncStatus==='ok'){
+    text='Sincronização: OK';
+    badgeStatus.className='badge sync-badge sync-ok';
+  } else if(state.lastSyncStatus==='error'){
+    text='Sincronização: falha';
+    badgeStatus.className='badge sync-badge sync-error';
+  } else if(state.lastSyncStatus==='loading'){
+    text='Sincronização: atualizando';
+    badgeStatus.className='badge sync-badge sync-pending';
+  }
+  badgeStatus.textContent=text;
+  const ref = state.lastSyncSuccess || state.lastRepoCheck || state.lastSyncAttempt;
+  badgeTime.textContent='Última sincronização: '+formatSyncDateTime(ref);
+  badgeTime.title = state.lastSyncError ? ('Último erro: '+state.lastSyncError) : '';
+}
 function setStatus(msg,isErr){const el=document.getElementById('statusBox'); el.style.borderColor=isErr?'#f3b0a8':'#d1d5db'; el.style.background=isErr?'#fff5f4':'#fafafa'; el.innerHTML=msg}
+
 function arrayBufferToBase64(buffer){let binary=''; const bytes=new Uint8Array(buffer); const chunk=0x8000; for(let i=0;i<bytes.length;i+=chunk){binary += String.fromCharCode.apply(null, bytes.subarray(i,i+chunk))} return btoa(binary)}
 function base64ToArrayBuffer(base64){const binary=atob(base64); const len=binary.length; const bytes=new Uint8Array(len); for(let i=0;i<len;i++) bytes[i]=binary.charCodeAt(i); return bytes.buffer}
 function matchesFilterRow(row, filter){const val=row[idx[filter.key]]; const selected=state.filters[filter.key]; return selected==='Todos' || val===selected}
@@ -146,7 +174,7 @@ function buildFilters(){const box=document.getElementById('filters'); box.innerH
 function refreshFilterOptions(){FILTERS.forEach(f=>{const allowed=getAllowedRowsForFilter(f.key); const vals=uniq(allowed.map(r=>r[idx[f.key]])).filter(v=>v!=='Todos'); const sel=document.getElementById('filter_'+f.key); const prev=state.filters[f.key]; sel.innerHTML='<option value="Todos">Todos</option>'+vals.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join(''); if(['Todos',...vals].includes(prev)){sel.value=prev}else{state.filters[f.key]='Todos'; sel.value='Todos'}})}
 function updateChips(){const chips=[]; FILTERS.forEach(f=>{const val=state.filters[f.key]; if(val!=='Todos'){chips.push('<span class="chip">'+f.label+': '+esc(val)+'</span>')}}); document.getElementById('activeChips').innerHTML=chips.join('')||'<span class="helper">Nenhum filtro ativo</span>'}
 function metrics(rows){const total=rows.reduce((s,r)=>s+num(r[idx.total]),0), quebra=rows.reduce((s,r)=>s+num(r[idx.quebra]),0), checklist=rows.reduce((s,r)=>s+num(r[idx.checklist_n]),0), indicador=total?quebra/total:0, ade=total?checklist/total:0, dates=uniq(rows.map(r=>r[idx.dt_agenda]).filter(Boolean)); return {total,quebra,checklist,indicador,ade,dates}}
-function updateCards(rows){const m=metrics(rows), latest=m.dates.length?parseDate(m.dates[m.dates.length-1]):null; document.getElementById('cardAtualizacao').textContent=latest?fmtDate.format(latest):'--'; document.getElementById('cardAtualizacaoSub').textContent=state.baseLabel+' • '+fmtInt.format(rows.length)+' registros'; const ind=document.getElementById('cardIndicador'); ind.textContent=fmtPct.format(m.indicador); ind.className='value '+rateClass(m.indicador); document.getElementById('cardIndicadorSub').innerHTML=rateText(m.indicador)+' • Desvio: <strong>'+deltaText(m.indicador-0.20)+'</strong>'; const chk=document.getElementById('cardChecklist'); chk.textContent=fmtPct.format(m.ade); chk.className='value '+checklistClass(m.ade); document.getElementById('cardChecklistSub').innerHTML=checklistText(m.ade)+' • Gap: <strong>'+deltaText(m.ade-0.80)+'</strong>'; document.getElementById('cardTotal').textContent=fmtInt.format(m.total); document.getElementById('cardQuebra').textContent=fmtInt.format(m.quebra); document.getElementById('badgePeriodo').textContent='Período: '+(m.dates.length?m.dates[0].split('-').reverse().join('/')+' a '+m.dates[m.dates.length-1].split('-').reverse().join('/'): '--'); document.getElementById('badgeAtualizacao').textContent='Atualização: '+(latest?fmtDate.format(latest):'--')}
+function updateCards(rows){const m=metrics(rows), latest=m.dates.length?parseDate(m.dates[m.dates.length-1]):null, syncRef=state.lastSyncSuccess||state.lastRepoCheck||state.lastSyncAttempt; document.getElementById('cardAtualizacao').textContent=latest?fmtDate.format(latest):'--'; document.getElementById('cardAtualizacaoSub').textContent=state.baseLabel+' • '+fmtInt.format(rows.length)+' registros • Sync '+formatSyncDateTime(syncRef); const ind=document.getElementById('cardIndicador'); ind.textContent=fmtPct.format(m.indicador); ind.className='value '+rateClass(m.indicador); document.getElementById('cardIndicadorSub').innerHTML=rateText(m.indicador)+' • Desvio: <strong>'+deltaText(m.indicador-0.20)+'</strong>'; const chk=document.getElementById('cardChecklist'); chk.textContent=fmtPct.format(m.ade); chk.className='value '+checklistClass(m.ade); document.getElementById('cardChecklistSub').innerHTML=checklistText(m.ade)+' • Gap: <strong>'+deltaText(m.ade-0.80)+'</strong>'; document.getElementById('cardTotal').textContent=fmtInt.format(m.total); document.getElementById('cardQuebra').textContent=fmtInt.format(m.quebra); document.getElementById('badgePeriodo').textContent='Período: '+(m.dates.length?m.dates[0].split('-').reverse().join('/')+' a '+m.dates[m.dates.length-1].split('-').reverse().join('/'): '--'); document.getElementById('badgeAtualizacao').textContent='Atualização: '+(latest?fmtDate.format(latest):'--')}
 function aggregateDaily(rows){const map=new Map(); rows.forEach(r=>{const d=r[idx.dt_agenda]; if(!d) return; if(!map.has(d)) map.set(d,{total:0,quebra:0,checklist:0,canais:new Map()}); const o=map.get(d); o.total+=num(r[idx.total]); o.quebra+=num(r[idx.quebra]); o.checklist+=num(r[idx.checklist_n]); const canal=r[idx.canal_grupo]||'Não identificado'; if(!o.canais.has(canal)) o.canais.set(canal,{total:0,quebra:0,checklist:0}); const c=o.canais.get(canal); c.total+=num(r[idx.total]); c.quebra+=num(r[idx.quebra]); c.checklist+=num(r[idx.checklist_n])}); return Array.from(map.entries()).sort((a,b)=>a[0].localeCompare(b[0])).map(([date,v])=>({date,total:v.total,quebra:v.quebra,checklist:v.checklist,indicador:v.total?v.quebra/v.total:0,ade:v.total?v.checklist/v.total:0,topCanais:Array.from(v.canais.entries()).map(([k,x])=>({canal:k,ind:x.total?x.quebra/x.total:0,ade:x.total?x.checklist/x.total:0,quebra:x.quebra,total:x.total})).sort((a,b)=>b.quebra-a.quebra).slice(0,3)}))}
 function renderDaily(rows){const box=document.getElementById('dailyChart'); const data=aggregateDaily(rows); if(!data.length){box.innerHTML='<div class="empty">Sem dados para o gráfico diário no corte selecionado.</div>'; return} const width=960,height=220,pad={l:46,r:24,t:18,b:34}; const maxY=1.0; const xStep=data.length>1?(width-pad.l-pad.r)/(data.length-1):0; const y=v=>height-pad.b-(v/maxY)*(height-pad.t-pad.b); const x=i=>pad.l+i*xStep; const ptsQuebra=data.map((d,i)=>x(i)+','+y(d.indicador)).join(' '), ptsAde=data.map((d,i)=>x(i)+','+y(d.ade)).join(' '), metaQuebraY=y(0.20), metaAdeY=y(0.80); const ticks=[0,.2,.4,.6,.8,1]; const every=data.length>18?Math.ceil(data.length/10):1; let svg='<svg viewBox="0 0 '+width+' '+height+'">'; ticks.forEach(v=>{svg+='<line x1="'+pad.l+'" y1="'+y(v)+'" x2="'+(width-pad.r)+'" y2="'+y(v)+'" stroke="#e5e7eb" stroke-width="1" />'; svg+='<text x="'+(pad.l-7)+'" y="'+(y(v)+4)+'" font-size="10" text-anchor="end" fill="#6b7280">'+(v*100).toFixed(0)+'%</text>'}); svg+='<line x1="'+pad.l+'" y1="'+metaQuebraY+'" x2="'+(width-pad.r)+'" y2="'+metaQuebraY+'" stroke="#9ca3af" stroke-width="1.7" stroke-dasharray="5 5" />'; svg+='<line x1="'+pad.l+'" y1="'+metaAdeY+'" x2="'+(width-pad.r)+'" y2="'+metaAdeY+'" stroke="#9ca3af" stroke-width="1.7" stroke-dasharray="5 5" />'; svg+='<polyline fill="none" stroke="var(--claro-red)" stroke-width="2.7" points="'+ptsQuebra+'" />'; svg+='<polyline fill="none" stroke="var(--claro-teal)" stroke-width="2.7" points="'+ptsAde+'" />'; data.forEach((d,i)=>{const tip=[d.date.split('-').reverse().join('/'),'IND Quebra: '+fmtPct.format(d.indicador),'ADE Checklist: '+fmtPct.format(d.ade),'Quebras: '+fmtInt.format(d.quebra),'Checklist aderente: '+fmtInt.format(d.checklist),'Total: '+fmtInt.format(d.total)]; d.topCanais.forEach(t=>tip.push(t.canal+' • Quebra '+fmtPct.format(t.ind)+' • ADE '+fmtPct.format(t.ade))); svg+='<circle cx="'+x(i)+'" cy="'+y(d.indicador)+'" r="3.7" fill="var(--claro-red)"><title>'+esc(tip.join(' | '))+'</title></circle>'; svg+='<circle cx="'+x(i)+'" cy="'+y(d.ade)+'" r="3.7" fill="var(--claro-teal)"><title>'+esc(tip.join(' | '))+'</title></circle>'; if(data.length<=12){svg+='<text x="'+x(i)+'" y="'+(y(d.indicador)-8)+'" font-size="9" text-anchor="middle" fill="#7f1d1d">'+(d.indicador*100).toFixed(0)+'%</text>'; svg+='<text x="'+x(i)+'" y="'+(y(d.ade)+13)+'" font-size="9" text-anchor="middle" fill="#0f5e67">'+(d.ade*100).toFixed(0)+'%</text>'} if(i%every===0||i===data.length-1){svg+='<text x="'+x(i)+'" y="'+(height-12)+'" font-size="10" text-anchor="middle" fill="#6b7280">'+d.date.slice(8,10)+'</text>'}}); svg+='<text x="'+(width-10)+'" y="'+(metaQuebraY-5)+'" font-size="10" text-anchor="end" fill="#6b7280">Meta quebra 20%</text>'; svg+='<text x="'+(width-10)+'" y="'+(metaAdeY-5)+'" font-size="10" text-anchor="end" fill="#6b7280">Meta checklist 80%</text>'; svg+='</svg>'; box.innerHTML=svg}
 function pareto(rows){const m=new Map(); rows.forEach(r=>{const q=num(r[idx.quebra]); if(!q) return; const key=(r[idx.cod_baixa]||'Sem código')+'|'+(r[idx.dsc_baixa]||'Sem descrição'); m.set(key,(m.get(key)||0)+q)}); return Array.from(m.entries()).map(([k,q])=>{const p=k.split('|'); return {cod:p[0],dsc:p[1],quebra:q}}).sort((a,b)=>b.quebra-a.quebra).slice(0,10)}
@@ -201,6 +229,9 @@ async function loadRepoWorkbook(options={}){
   const opts = {showStatus:true, forceMessage:false, ...options};
   const bust = Date.now();
   const url = REPO_EXCEL_PATH + '?v=' + bust;
+  state.lastSyncAttempt = new Date().toISOString();
+  state.lastSyncStatus = 'loading';
+  updateSyncIndicator();
   try{
     if(opts.showStatus){
       setStatus('Lendo automaticamente o arquivo <strong>'+esc(REPO_EXCEL_PATH)+'</strong> publicado no repositório...', false);
@@ -215,16 +246,23 @@ async function loadRepoWorkbook(options={}){
     const changed = hash !== state.lastLoadedHash;
     state.lastLoadedHash = hash;
     state.lastRepoCheck = new Date().toISOString();
+    state.lastSyncSuccess = state.lastRepoCheck;
+    state.lastSyncStatus = 'ok';
+    state.lastSyncError = '';
     replaceFile(buffer, 'IND_QUEBRA.xlsx', {
       baseLabel:'Arquivo do repositório GitHub',
       keepStatus:false
     });
+    updateSyncIndicator();
     if(opts.showStatus || opts.forceMessage || changed){
       setStatus('Base atualizada a partir de <strong>'+esc(REPO_EXCEL_PATH)+'</strong>. Sempre que você substituir o arquivo Excel no repositório, o painel buscará a versão mais recente ao recarregar a página, ao voltar para esta aba e em verificações automáticas periódicas.', false);
     }
     return true;
   } catch(err){
     const detail = err && err.name==='AbortError' ? 'Tempo limite excedido ao buscar a planilha.' : (err && err.message ? err.message : String(err));
+    state.lastSyncStatus = 'error';
+    state.lastSyncError = detail;
+    updateSyncIndicator();
     if(state.rows && state.rows.length){
       if(opts.showStatus || opts.forceMessage){
         setStatus('Não foi possível atualizar do repositório agora: <strong>'+esc(detail)+'</strong>. O painel continuará exibindo a última base carregada nesta sessão.', true);
@@ -242,7 +280,6 @@ document.getElementById('btnSaveHtml').addEventListener('click',saveHtml);
 document.getElementById('btnExportPng').addEventListener('click',exportPng);
 document.getElementById('tableSearch').addEventListener('input',e=>{state.search=e.target.value||''; renderTable(getFilteredRows())});
 document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>{const keyMap={canal:'canal',equipe:'equipe',total:'total',quebra:'quebra',indicador:'indicador',ade:'ade'}, key=keyMap[th.dataset.sort]; if(state.sort.key===key) state.sort.dir=state.sort.dir==='asc'?'desc':'asc'; else state.sort={key,dir:(key==='canal'||key==='equipe')?'asc':'desc'}; renderTable(getFilteredRows())}));
-document.getElementById('fileInput').addEventListener('change',async e=>{const file=e.target.files&&e.target.files[0]; if(!file) return; try{const buf=await file.arrayBuffer(); replaceFile(buf,file.name,{baseLabel:'Excel local em pré-visualização',statusMessage:'Nova base local <strong>'+esc(file.name)+'</strong> carregada com sucesso. Essa prévia vale apenas nesta sessão do navegador; para atualização permanente no site, substitua o arquivo <strong>IND_QUEBRA.xlsx</strong> no repositório GitHub.'})}catch(err){setStatus('Não foi possível processar a nova base: '+esc(err.message),true)} finally {e.target.value=''}});
 window.addEventListener('focus',()=>{loadRepoWorkbook({showStatus:false,forceMessage:false})});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible') loadRepoWorkbook({showStatus:false,forceMessage:false})});
 setInterval(()=>{loadRepoWorkbook({showStatus:false,forceMessage:false})}, AUTO_REFRESH_MS);
@@ -250,6 +287,7 @@ setInterval(()=>{loadRepoWorkbook({showStatus:false,forceMessage:false})}, AUTO_
 async function initDashboard(){
   buildFilters();
   refreshAll();
+  updateSyncIndicator();
   setStatus('Iniciando leitura automática do arquivo <strong>'+esc(REPO_EXCEL_PATH)+'</strong>...', false);
   await loadRepoWorkbook({showStatus:true,forceMessage:true});
 }
