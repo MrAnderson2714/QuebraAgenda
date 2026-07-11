@@ -33,7 +33,7 @@
   <div class="topbar-right">
     <div class="badge" id="badgePeriodo">Período: --</div>
     <div class="badge" id="badgeAtualizacao">Atualização: --</div>
-    <div class="badge sync-badge sync-pending" id="badgeSyncStatus">Sincronização: aguardando</div>
+    <div class="badge sync-badge sync-pending" id="badgeSyncStatus">Sincronização: aguardando carga inicial</div>
     <div class="badge" id="badgeSyncTime">Última sincronização: --</div>
     <button class="btn secondary" id="btnReloadEmbedded">Atualizar do repositório</button>
     <button class="btn" id="btnExportPng">Exportar PNG</button>
@@ -47,8 +47,8 @@
     <div class="section-title" style="margin-top:10px">Filtros ativos</div>
     <div class="chips" id="activeChips"></div>
     <button class="btn" id="btnClearFilters" style="width:100%;margin-top:6px">Limpar filtros</button>
-    <div class="small-note">Versão 3.0 compacta: leitura automática do arquivo <strong>IND_QUEBRA.xlsx</strong> publicado no mesmo repositório do GitHub. Para atualizar permanentemente o dashboard, substitua esse Excel no repositório e publique o commit.</div>
-    <div class="status-box" id="statusBox">Aguardando leitura automática do arquivo do repositório e atualização do indicador de sincronização...</div>
+    <div class="small-note">Versão 3.0 compacta: leitura do arquivo <strong>IND_QUEBRA.xlsx</strong> publicado no mesmo repositório do GitHub no carregamento da página. Para atualizar o dashboard após trocar o Excel, use <strong>F5</strong> ou o botão <strong>Atualizar do repositório</strong>.</div>
+    <div class="status-box" id="statusBox">Aguardando leitura do arquivo do repositório no carregamento da página...</div>
   </aside>
   <main class="main">
     <section class="cards">
@@ -109,7 +109,6 @@
 /*__EMBEDDED_META_START__*/const EMBEDDED_META = {generated_at:"", max_dt_agenda:"", rows_merged:0, join_rate:0, source_label:"Repositório GitHub"};/*__EMBEDDED_META_END__*/
 /*__EMBEDDED_XLSX_START__*/const EMBEDDED_XLSX_BASE64 = "";/*__EMBEDDED_XLSX_END__*/
 const REPO_EXCEL_PATH = "./IND_QUEBRA.xlsx";
-const AUTO_REFRESH_MS = 120000;
 const REPO_FETCH_TIMEOUT_MS = 30000;
 const idx = Object.fromEntries(EMBEDDED_FIELDS.map((f,i)=>[f,i]));
 const FILTERS=[
@@ -255,7 +254,7 @@ async function loadRepoWorkbook(options={}){
     });
     updateSyncIndicator();
     if(opts.showStatus || opts.forceMessage || changed){
-      setStatus('Base atualizada a partir de <strong>'+esc(REPO_EXCEL_PATH)+'</strong>. Sempre que você substituir o arquivo Excel no repositório, o painel buscará a versão mais recente ao recarregar a página, ao voltar para esta aba e em verificações automáticas periódicas.', false);
+      setStatus('Base atualizada a partir de <strong>'+esc(REPO_EXCEL_PATH)+'</strong>. Sempre que você substituir o arquivo Excel no repositório, use <strong>F5</strong> ou clique em <strong>Atualizar do repositório</strong> para recarregar a versão mais recente.', false);
     }
     return true;
   } catch(err){
@@ -280,15 +279,12 @@ document.getElementById('btnSaveHtml').addEventListener('click',saveHtml);
 document.getElementById('btnExportPng').addEventListener('click',exportPng);
 document.getElementById('tableSearch').addEventListener('input',e=>{state.search=e.target.value||''; renderTable(getFilteredRows())});
 document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>{const keyMap={canal:'canal',equipe:'equipe',total:'total',quebra:'quebra',indicador:'indicador',ade:'ade'}, key=keyMap[th.dataset.sort]; if(state.sort.key===key) state.sort.dir=state.sort.dir==='asc'?'desc':'asc'; else state.sort={key,dir:(key==='canal'||key==='equipe')?'asc':'desc'}; renderTable(getFilteredRows())}));
-window.addEventListener('focus',()=>{loadRepoWorkbook({showStatus:false,forceMessage:false})});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible') loadRepoWorkbook({showStatus:false,forceMessage:false})});
-setInterval(()=>{loadRepoWorkbook({showStatus:false,forceMessage:false})}, AUTO_REFRESH_MS);
 
 async function initDashboard(){
   buildFilters();
   refreshAll();
   updateSyncIndicator();
-  setStatus('Iniciando leitura automática do arquivo <strong>'+esc(REPO_EXCEL_PATH)+'</strong>...', false);
+  setStatus('Carregando o arquivo <strong>'+esc(REPO_EXCEL_PATH)+'</strong> ao abrir a página...', false);
   await loadRepoWorkbook({showStatus:true,forceMessage:true});
 }
 
