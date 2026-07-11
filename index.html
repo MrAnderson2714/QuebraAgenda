@@ -196,6 +196,7 @@ function replaceBetween(src,start,end,content){const i=src.indexOf(start), j=src
 function saveHtml(){try{let html=document.documentElement.outerHTML; html=replaceBetween(html,'/*__EMBEDDED_FIELDS_START__*/','/*__EMBEDDED_FIELDS_END__*/','const EMBEDDED_FIELDS = '+JSON.stringify(EMBEDDED_FIELDS)+';'); html=replaceBetween(html,'/*__EMBEDDED_ROWS_START__*/','/*__EMBEDDED_ROWS_END__*/','const EMBEDDED_ROWS = '+JSON.stringify(state.rows)+';'); const latestRows=state.rows; const dts=latestRows.map(r=>r[idx.dt_agenda]).filter(Boolean).sort(); const meta={...EMBEDDED_META,generated_at:new Date().toISOString().slice(0,19).replace('T',' '),max_dt_agenda:dts.length?dts[dts.length-1]:'',rows_merged:latestRows.length,source_label:state.baseLabel}; html=replaceBetween(html,'/*__EMBEDDED_META_START__*/','/*__EMBEDDED_META_END__*/','const EMBEDDED_META = '+JSON.stringify(meta)+';'); html=replaceBetween(html,'/*__EMBEDDED_XLSX_START__*/','/*__EMBEDDED_XLSX_END__*/','const EMBEDDED_XLSX_BASE64 = '+JSON.stringify(state.rawWorkbookBase64)+';'); const blob=new Blob([html],{type:'text/html;charset=utf-8'}); const fileName='Dashboard_Analytics_v3.html'; if('showSaveFilePicker' in window){window.showSaveFilePicker({suggestedName:fileName,types:[{description:'Arquivo HTML',accept:{'text/html':['.html']}}]}).then(async handle=>{const writable=await handle.createWritable(); await writable.write(blob); await writable.close(); setStatus('HTML atualizado salvo com sucesso.',false)}).catch(err=>{if(err&&err.name!=='AbortError') setStatus('Falha ao salvar HTML: '+esc(err.message),true)})} else {const url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url; a.download=fileName; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000); setStatus('Download do HTML atualizado iniciado.',false)}} catch(err){setStatus('Erro ao montar HTML: '+esc(err.message),true)}}
 async function exportPng(){try{if(typeof html2canvas==='undefined') throw new Error('Biblioteca html2canvas indisponível.'); const target=document.getElementById('dashboardRoot'); const canvas=await html2canvas(target,{backgroundColor:'#f5f6f8',scale:2,useCORS:true,logging:false,windowWidth:document.documentElement.scrollWidth,windowHeight:document.documentElement.scrollHeight}); const grupo=state.filters.grupo_canais && state.filters.grupo_canais!=='Todos' ? String(state.filters.grupo_canais).replace(/[^A-Za-z0-9_-]/g,'_') : ''; const fileName=grupo ? 'Dashboard_Quebra_Agenda_v3_'+grupo+'.png' : 'Dashboard_Quebra_Agenda_v3.png'; const url=canvas.toDataURL('image/png'); const a=document.createElement('a'); a.href=url; a.download=fileName; a.click(); setStatus('Exportação PNG concluída com sucesso. Arquivo: <strong>'+esc(fileName)+'</strong>.',false)} catch(err){setStatus('Não foi possível exportar o PNG: '+esc(err.message)+'. Se estiver totalmente offline, verifique se a biblioteca html2canvas foi carregada.',true)}}
 
+
 function replaceFile(buffer,fileName,options={}){
   if(typeof XLSX==='undefined') throw new Error('A biblioteca XLSX não está disponível no navegador.');
   const wb=XLSX.read(buffer,{type:'array',cellDates:true});
@@ -204,8 +205,8 @@ function replaceFile(buffer,fileName,options={}){
   state.rows=rows;
   state.rawWorkbookBase64=arrayBufferToBase64(buffer);
   state.baseLabel=options.baseLabel || ('Base substituída: '+fileName);
-  Object.assign(state.filters, DEFAULT_FILTERS);
   buildFilters();
+  syncSearchInput();
   refreshAll();
   if(options.keepStatus!==false){
     const msg = options.statusMessage || ('Nova base <strong>'+esc(fileName)+'</strong> carregada com sucesso.');
@@ -273,15 +274,18 @@ async function loadRepoWorkbook(options={}){
   }
 }
 
-document.getElementById('btnClearFilters').addEventListener('click',()=>{Object.assign(state.filters, DEFAULT_FILTERS); buildFilters(); refreshAll()});
+
+document.getElementById('btnClearFilters').addEventListener('click',()=>{Object.assign(state.filters, DEFAULT_FILTERS); state.search=''; state.sort={key:'recovery',dir:'desc'}; buildFilters(); refreshAll()});
 document.getElementById('btnReloadEmbedded').addEventListener('click',()=>{loadRepoWorkbook({showStatus:true,forceMessage:true})});
 document.getElementById('btnSaveHtml').addEventListener('click',saveHtml);
 document.getElementById('btnExportPng').addEventListener('click',exportPng);
-document.getElementById('tableSearch').addEventListener('input',e=>{state.search=e.target.value||''; renderTable(getFilteredRows())});
-document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>{const keyMap={canal:'canal',equipe:'equipe',total:'total',quebra:'quebra',indicador:'indicador',ade:'ade'}, key=keyMap[th.dataset.sort]; if(state.sort.key===key) state.sort.dir=state.sort.dir==='asc'?'desc':'asc'; else state.sort={key,dir:(key==='canal'||key==='equipe')?'asc':'desc'}; renderTable(getFilteredRows())}));
+document.getElementById('tableSearch').addEventListener('input',e=>{state.search=e.target.value||''; renderTable(getFilteredRows()); saveUiState()});
+document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>{const keyMap={canal:'canal',equipe:'equipe',total:'total',quebra:'quebra',recovery:'recovery',indicador:'indicador',ade:'ade'}, key=keyMap[th.dataset.sort]; if(state.sort.key===key) state.sort.dir=state.sort.dir==='asc'?'desc':'asc'; else state.sort={key,dir:(key==='canal'||key==='equipe')?'asc':'desc'}; renderTable(getFilteredRows()); saveUiState()}));
 
 async function initDashboard(){
+  loadUiState();
   buildFilters();
+  syncSearchInput();
   refreshAll();
   updateSyncIndicator();
   setStatus('Carregando o arquivo <strong>'+esc(REPO_EXCEL_PATH)+'</strong> ao abrir a página...', false);
