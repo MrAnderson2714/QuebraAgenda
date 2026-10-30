@@ -2,16 +2,22 @@
 
 Dashboard executivo e operacional para acompanhamento de **Quebra de Agenda** e **Aderência ao Checklist**, desenvolvido em HTML único, responsivo e interativo.
 
-O painel consolida informações geográficas, comerciais e operacionais para identificar os principais ofensores, causas de baixa, equipes, canais e logins de vendedores que demandam atuação.
+## Acesso ao dashboard
+
+[**Abrir Dashboard de Quebra de Agenda**](https://mranderson2714.github.io/QuebraAgenda/)
+
+> Link direto: https://mranderson2714.github.io/QuebraAgenda/
 
 ---
 
 ## Visão geral
 
+O painel consolida informações geográficas, comerciais e operacionais para identificar os principais ofensores, causas de baixa, equipes, canais e logins de vendedores que demandam atuação.
+
 O dashboard relaciona três conjuntos de dados do arquivo `IND_QUEBRA.xlsx`:
 
-- **CIDADES**: cadastro de cidades e dimensões geográficas por código IBGE;
-- **CONTRATOS**: canal, equipe e login do vendedor por `NR_SOLICITACAO + COD_MUNICIPIO`;
+- **CIDADES**: cadastro geográfico por código IBGE;
+- **CONTRATOS**: canal, equipe e login do vendedor;
 - **QUEBRA**: agenda, quebra, checklist, tipo de OS e causa de baixa.
 
 O relacionamento principal entre as bases comerciais e operacionais utiliza:
@@ -20,15 +26,13 @@ O relacionamento principal entre as bases comerciais e operacionais utiliza:
 NR_SOLICITACAO + IBGE
 ```
 
-O arquivo HTML possui uma base incorporada para contingência e, quando publicado no GitHub Pages, tenta carregar automaticamente o arquivo `IND_QUEBRA.xlsx` localizado na mesma pasta do dashboard.
+Quando publicado no GitHub Pages, o dashboard procura automaticamente o arquivo `IND_QUEBRA.xlsx` na mesma pasta do HTML.
 
 ---
 
-## Indicadores principais
+## Indicadores
 
 ### IND Quebra
-
-Percentual de agendas com quebra:
 
 ```text
 IND Quebra = SUM(QUEBRA) / SUM(TOTAL)
@@ -36,7 +40,7 @@ IND Quebra = SUM(QUEBRA) / SUM(TOTAL)
 
 **Meta:** menor ou igual a **20%**.
 
-Faixas visuais:
+Faixas:
 
 - `0% a 20%`: verde;
 - `acima de 20% a 25%`: amarelo;
@@ -44,71 +48,53 @@ Faixas visuais:
 
 ### ADE Checklist
 
-Percentual de agendas aderentes ao checklist de confirmação:
-
 ```text
 ADE Checklist = SUM(N) / SUM(TOTAL)
 ```
 
-Onde:
-
-- `N = 1`: contato/checklist aderente;
-- `N = 0`: contato/checklist não aderente.
+- `N = 1`: aderente ao checklist;
+- `N = 0`: não aderente ao checklist.
 
 **Meta:** maior ou igual a **80%**.
 
-O checklist representa o contato com o cliente para confirmar o agendamento e reduzir a probabilidade de quebra.
-
 ### Recuperação
-
-Quantidade estimada de agendas que precisam deixar de quebrar para o indicador retornar à meta:
 
 ```text
 Recuperação = MAX(0, CEILING(SUM(QUEBRA) - 20% × SUM(TOTAL)))
 ```
 
+Representa a quantidade estimada de agendas que precisam deixar de quebrar para o indicador retornar à meta.
+
 ---
 
-## Estrutura do dashboard
+## Recursos do dashboard
 
 ### Cards executivos
 
-- **Atualização**: última data de agenda disponível e origem da base;
-- **IND Quebra**: valor atual, desvio da meta, comparação com D-1 e D-7 e recuperação necessária;
-- **ADE Checklist**: aderência atual, distância da meta, comparação com D-1 e D-7 e confirmações adicionais necessárias;
-- **Total**: volume de agendas no recorte;
-- **Total Quebra**: volume de quebras no recorte.
-
-### Indicador Diário: Quebra x ADE Checklist
-
-Gráfico temporal com barras de:
-
+- Atualização da base;
 - IND Quebra;
-- ADE Checklist.
+- ADE Checklist;
+- Total de agendas;
+- Total de quebras;
+- comparativos D-1 e D-7;
+- volumes necessários para recuperação das metas.
 
-Recursos:
+### Gráfico Quebra x ADE Checklist
 
-- valores percentuais nas barras;
+- visão por Dia, Semana ou Mês;
+- semana de domingo a sábado;
 - metas de 20% e 80%;
-- agrupamento por **Dia**, **Semana** ou **Mês**;
-- semana considerada de **domingo a sábado**;
 - comparação com o período anterior;
-- tooltip com volume, indicadores e principais canais.
+- detalhamento dos principais canais em tooltip.
 
 ### Pareto de Causa Raiz
 
-Ranking dos principais `COD_BAIXA` e `DSC_BAIXA` por volume de quebra.
-
-O tooltip apresenta:
-
-- código e descrição;
-- total de quebras;
+- ranking por `COD_BAIXA` e `DSC_BAIXA`;
+- quantidade de quebras;
 - participação da causa;
 - distribuição por Grupo de Canais.
 
-### Analítico de Indicador por Hierarquia
-
-Tabela dinâmica com seletor de hierarquia.
+### Analítico por Hierarquia
 
 Hierarquias disponíveis:
 
@@ -120,7 +106,7 @@ Hierarquias disponíveis:
 - Canal de Venda Subgrupo;
 - Canal de Venda Grupo.
 
-Métricas exibidas:
+Métricas:
 
 - Total;
 - Quebras;
@@ -128,60 +114,39 @@ Métricas exibidas:
 - IND Quebra;
 - ADE Checklist.
 
-O tooltip de cada item apresenta os indicadores consolidados e a evolução completa dos últimos 20 dias disponíveis no recorte:
-
-```text
-DIA        | QUEBRA  | ADERÊNCIA
-10/10/2026 |   22,2% |     25,9%
-11/10/2026 |   30,0% |     32,4%
-```
+O tooltip apresenta os indicadores e os últimos 20 dias disponíveis para cada item.
 
 ### P&R: Análise Crítica
 
 A análise automática considera:
 
-- situação das metas;
-- tendência temporal;
+- situação e tendência dos indicadores;
 - relação entre checklist e quebra;
 - principais causas raiz;
-- concentração de quebras;
-- hierarquias e áreas prioritárias;
-- volume necessário para recuperação.
-
-A versão nominal também analisa os **Top 5 logins de vendedores por volume de quebra**, informando:
-
-- `CD_LOGIN_VENDEDOR`;
-- equipe de vendas predominante;
-- canal de venda;
-- Total;
-- Quebras;
-- Recuperação;
-- participação nas quebras;
-- IND Quebra;
-- ADE Checklist;
-- três principais `DSC_BAIXA`.
-
-Registros sem login identificado são apresentados como alerta de qualidade cadastral.
+- áreas prioritárias;
+- volume necessário para recuperação;
+- Top 5 logins de vendedores por volume de quebra;
+- equipe e canal predominantes;
+- principais `DSC_BAIXA` por login;
+- alerta de registros sem login identificado.
 
 ---
 
 ## Filtros
-
-O dashboard oferece filtros encadeados por:
 
 - Grupo;
 - UF;
 - Cluster;
 - Cidade;
 - Ano/Mês;
+- intervalo de datas;
 - Grupo OS;
 - Tipo OS;
 - Novo Domicílio;
 - Grupo de Canais;
-- Canal Grupo;
-- intervalo de datas.
+- Canal Grupo.
 
-O intervalo de datas é recalculado conforme o **Ano/Mês** e as datas disponíveis na base. Todos os componentes do painel respeitam o período e os filtros selecionados.
+Todos os KPIs, gráficos, tabelas, análises e exportações respeitam os filtros ativos.
 
 ### Agrupamento de canais
 
@@ -199,33 +164,20 @@ O intervalo de datas é recalculado conforme o **Ano/Mês** e as datas disponív
 
 ## Exportações
 
-### Exportar PNG
+### PNG
 
-Gera uma imagem do dashboard com os filtros ativos.
-
-Quando um Grupo de Canais estiver selecionado, o grupo será incluído no nome:
+Exemplos:
 
 ```text
+Dashboard_Quebra_Agenda_v3.png
 Dashboard_Quebra_Agenda_v3_AA.png
 Dashboard_Quebra_Agenda_v3_PAP.png
 Dashboard_Quebra_Agenda_v3_PME.png
 ```
 
-Sem seleção específica:
+### XLSX
 
-```text
-Dashboard_Quebra_Agenda_v3.png
-```
-
-### Exportar XLSX
-
-A tabela hierárquica pode ser exportada para Excel, respeitando:
-
-- hierarquia selecionada;
-- filtros ativos;
-- intervalo de datas;
-- pesquisa aplicada;
-- ordenação atual.
+A exportação do Analítico por Hierarquia respeita período, filtros, pesquisa e ordenação.
 
 Exemplos:
 
@@ -235,13 +187,13 @@ Analitico_Indicador_Cidade_PAP.xlsx
 Analitico_Indicador_Equipe_de_Vendas_PME.xlsx
 ```
 
-### Baixar HTML
+### HTML
 
-Gera uma nova cópia do dashboard com a base mais recente incorporada no próprio HTML.
+O botão **Baixar HTML** gera uma nova cópia do painel com a base mais recente incorporada.
 
 ---
 
-## Estrutura recomendada do repositório
+## Estrutura do repositório
 
 ```text
 /
@@ -250,47 +202,30 @@ Gera uma nova cópia do dashboard com a base mais recente incorporada no própri
 └── README.md
 ```
 
-Renomeie o dashboard para `index.html` para publicação direta pelo GitHub Pages.
-
-O caminho de leitura configurado no HTML é:
+O caminho de leitura configurado no dashboard é:
 
 ```javascript
 const REPO_EXCEL_PATH = "./IND_QUEBRA.xlsx";
 ```
 
-Portanto, `index.html` e `IND_QUEBRA.xlsx` devem permanecer na mesma pasta.
+O HTML e o Excel devem permanecer na mesma pasta.
 
 ---
 
-## Publicação no GitHub Pages
+## Atualização da base
 
-1. Crie ou acesse o repositório no GitHub.
-2. Adicione os arquivos:
-   - `index.html`;
-   - `IND_QUEBRA.xlsx`;
-   - `README.md`.
-3. Abra **Settings > Pages**.
-4. Em **Build and deployment**, selecione **Deploy from a branch**.
-5. Escolha a branch, normalmente `main`, e a pasta `/root`.
-6. Salve a configuração.
-7. Acesse a URL publicada pelo GitHub Pages.
+1. Substitua `IND_QUEBRA.xlsx` no repositório.
+2. Preserve o nome, as guias e os cabeçalhos esperados.
+3. Confirme o commit da nova versão.
+4. Atualize a página com `F5` ou use **Atualizar do repositório**.
 
-Ao substituir o Excel no repositório:
-
-1. mantenha o nome `IND_QUEBRA.xlsx`;
-2. confirme o commit da nova versão;
-3. abra ou atualize o dashboard com `F5`;
-4. se necessário, use **Atualizar do repositório**.
-
-O carregamento remoto possui timeout configurado de **30 segundos**. Se a leitura falhar, o painel mantém a última base disponível na sessão ou utiliza a base incorporada.
+Se a atualização remota falhar, o painel mantém a última base disponível na sessão ou utiliza a base incorporada ao HTML.
 
 ---
 
-## Estrutura mínima esperada do Excel
+## Estrutura mínima do Excel
 
-### Guia CIDADES
-
-Campos utilizados:
+### CIDADES
 
 ```text
 CD_IBGE
@@ -301,9 +236,7 @@ NM_CIDADE
 NM_SEGMENTO_MUNICIPIO
 ```
 
-### Guia CONTRATOS
-
-Campos utilizados:
+### CONTRATOS
 
 ```text
 DT
@@ -316,9 +249,7 @@ COD_MUNICIPIO
 QT
 ```
 
-### Guia QUEBRA
-
-Campos utilizados:
+### QUEBRA
 
 ```text
 NR_SOLICITACAO
@@ -336,22 +267,6 @@ TOTAL
 N
 ```
 
-A remoção ou alteração dos nomes dessas colunas pode impedir a atualização correta do dashboard.
-
----
-
-## Atualização da base
-
-### Pelo repositório
-
-Substitua `IND_QUEBRA.xlsx` por uma nova versão com o mesmo nome e estrutura. Depois atualize a página ou use o botão de atualização do repositório.
-
-### Pelo navegador
-
-Quando disponível na interface, **Substituir Excel** permite selecionar uma planilha local sem recarregar a página.
-
-Após validar a nova base, utilize **Baixar HTML** para gerar uma cópia com o XLSX bruto incorporado em Base64.
-
 ---
 
 ## Tecnologias
@@ -359,24 +274,20 @@ Após validar a nova base, utilize **Baixar HTML** para gerar uma cópia com o X
 - HTML5;
 - CSS responsivo;
 - JavaScript;
-- SheetJS/XLSX para leitura e exportação de Excel;
-- html2canvas para exportação PNG;
-- SVG para gráficos;
-- armazenamento local do navegador para preferências da interface.
+- SheetJS/XLSX;
+- html2canvas;
+- SVG;
+- armazenamento local do navegador.
 
 ---
 
 ## Execução local
 
-O arquivo pode ser aberto diretamente no navegador. Contudo, navegadores podem restringir a leitura automática de arquivos locais por políticas de segurança.
-
-Para simular o comportamento publicado, execute um servidor local na pasta do projeto. Exemplo com Python:
-
 ```bash
 python -m http.server 8000
 ```
 
-Depois acesse:
+Acesse:
 
 ```text
 http://localhost:8000
@@ -384,39 +295,15 @@ http://localhost:8000
 
 ---
 
-## Limitações conhecidas
-
-- A atualização automática depende da disponibilidade de `IND_QUEBRA.xlsx` na mesma origem do HTML.
-- A planilha deve manter as guias e os campos esperados.
-- Registros sem correspondência na chave `NR_SOLICITACAO + IBGE` são classificados como **Não identificado**.
-- O relacionamento nominal de vendedores depende do preenchimento de `CD_LOGIN_VENDEDOR` em CONTRATOS.
-- As bibliotecas externas precisam estar acessíveis para determinadas funções, como exportação PNG ou substituição de Excel.
-- O dashboard apresenta associação operacional entre checklist e quebra, não uma comprovação estatística de causalidade.
-
----
-
-## Boas práticas de manutenção
-
-- Preserve o nome `IND_QUEBRA.xlsx`.
-- Evite renomear guias ou colunas.
-- Valide datas em `DT_AGENDA` e `DT`.
-- Garanta que `QUEBRA`, `TOTAL` e `N` sejam numéricos.
-- Monitore chaves sem correspondência entre QUEBRA e CONTRATOS.
-- Monitore registros sem `CD_LOGIN_VENDEDOR`.
-- Faça commit conjunto do HTML, Excel e README quando houver mudança estrutural.
-- Não publique dados sensíveis em repositórios públicos.
-
----
-
 ## Segurança e privacidade
 
-A base pode conter informações operacionais e identificadores internos. Recomenda-se utilizar:
+A base pode conter informações operacionais e identificadores internos. Recomenda-se:
 
-- repositório privado;
-- GitHub Enterprise, quando aplicável;
-- controle de acesso adequado;
-- revisão de dados antes da publicação;
-- anonimização de logins quando o painel for compartilhado externamente.
+- utilizar repositório privado ou GitHub Enterprise;
+- controlar permissões de acesso;
+- revisar os dados antes da publicação;
+- anonimizar logins em compartilhamentos externos;
+- evitar a publicação de dados sensíveis em repositórios públicos.
 
 ---
 
@@ -424,15 +311,4 @@ A base pode conter informações operacionais e identificadores internos. Recome
 
 **Dashboard de Quebra de Agenda v3**
 
-Principais recursos desta versão:
-
-- Quebra x ADE Checklist;
-- comparativos D-1 e D-7;
-- filtro global de datas;
-- visão Dia/Semana/Mês;
-- Pareto de causa raiz;
-- analítico por hierarquia;
-- exportação XLSX e PNG;
-- análise nominal de logins, equipes e causas de baixa;
-- carregamento de Excel pelo repositório;
-- base de contingência incorporada ao HTML.
+Acesso: [https://mranderson2714.github.io/QuebraAgenda/](https://mranderson2714.github.io/QuebraAgenda/)
