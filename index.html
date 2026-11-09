@@ -93,7 +93,7 @@ body.dark .heatmap tbody td.row-head{color:#000!important;background:#fff!import
 <body>
 <header class="top"><div class="logo">claro</div><div class="title"><h1>Dashboard Novos Domicílios Claro</h1><small>Quebra • Antiquebra • Conversão | Atualização automática pelas bases JSON/GZIP</small></div><div class="actions"><button class="btn alt" id="reload">↻ Recarregar</button><button class="btn alt" id="theme">☀ Modo</button><button class="btn" id="png">▣ PNG</button><button class="btn" id="save">⇩ HTML</button></div></header>
 <div class="layout" id="dashboard"><aside><div class="filter-head"><b>Filtros globais</b><button class="zoom" id="clear">Limpar</button></div><div id="filterStatus"></div><div class="filter"><label>Ano/Mês <span title="Competência YYYYMM">ⓘ</span></label><select id="fMonth" multiple></select></div><div class="filter range-bar"><label>Intervalo disponível <span>ⓘ</span></label><div class="dual-range"><div class="range-fill" id="dateRangeFill"></div><input id="rStart" type="range" min="0" max="0"><input id="rEnd" type="range" min="0" max="0"></div><small id="rangeLabel"></small></div><div class="filter"><label>Datas</label><div class="range-row"><input id="fStart" type="date"><input id="fEnd" type="date"></div></div><div id="filters"></div><div class="filter" id="sidebarLineBusinessStatic">
-<label>LINHA NEGÓCIO <span title="Filtro exclusivo da aba Conversão">ⓘ</span></label>
+<label>LINHA NEGÓCIO <span title="Filtro global por Linha Negócio">ⓘ</span></label>
 <select id="lineBusinessSide" multiple size="4">
 <option value="BSOD">BSOD</option>
 <option value="CLARO EMPRESAS" selected>CLARO EMPRESAS</option>
@@ -789,6 +789,22 @@ const paretoSetupBase=setup;
 setup=function(){
   paretoSetupBase();
   resetParetoPersistentConfiguration();
+};
+
+
+// ===== Ajuste exclusivo solicitado: Linha Negocio tambem filtra a aba Quebra =====
+const lineBusinessBreakMatchBase=match;
+match=function(r,dateKey){
+  if(!lineBusinessBreakMatchBase(r,dateKey))return false;
+  const lines=selectedSidebarLines();
+  if(lines.length&&!lines.includes(String(r.NM_LINHA_NEGOCIO??'')))return false;
+  return true;
+};
+const lineBusinessBreakSetupBase=setup;
+setup=function(){
+  lineBusinessBreakSetupBase();
+  const side=$('lineBusinessSide');
+  if(side)side.onchange=apply;
 };
 
 load();
