@@ -1,0 +1,19 @@
+{
+  "versao": "1.0",
+  "atualizadoEm": "2026-11-08",
+  "quebra": {
+    "percentualQuebra": 0.20,
+    "adeChecklist": 0.80
+  },
+  "antiquebra": {
+    "tratamento": 0.80,
+    "reversao": 0.20,
+    "aderenciaElegivel": 0.95
+  },
+  "conversao": {
+    "conversaoBruta": 0.80,
+    "conversaoLiquida": 0.98,
+    "desistenciaMaxima": 0.17,
+    "instalacao3Dias": 0.75
+  }
+}
