@@ -1,0 +1,73 @@
+name: Atualizar bases do dashboard
+
+on:
+  repository_dispatch:
+    types:
+      - atualizar-bases
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: atualizar-bases-dashboard
+  cancel-in-progress: true
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar repositório do dashboard
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DASHBOARD_TOKEN }}
+
+      - name: Baixar repositório privado das bases
+        uses: actions/checkout@v4
+        with:
+          repository: MrAnderson2714/base_quebra
+          ref: main
+          token: ${{ secrets.DASHBOARD_TOKEN }}
+          path: base_quebra
+
+      - name: Copiar arquivos para o dashboard
+        shell: bash
+        run: |
+          set -e
+
+          for arquivo in \
+            quebra.json.gz \
+            nd.json.gz \
+            ibge.json.gz \
+            metas.json
+          do
+            if [ -f "base_quebra/$arquivo" ]; then
+              cp "base_quebra/$arquivo" "./$arquivo"
+              echo "Copiado: $arquivo"
+            else
+              echo "Arquivo não encontrado: $arquivo"
+            fi
+          done
+
+          rm -rf base_quebra
+
+      - name: Registrar atualização
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add \
+            quebra.json.gz \
+            nd.json.gz \
+            ibge.json.gz \
+            metas.json
+
+          if git diff --cached --quiet; then
+            echo "Não existem alterações para publicar."
+          else
+            git commit -m "Atualiza bases do dashboard"
+            git push
+          fi
