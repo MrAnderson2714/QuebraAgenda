@@ -473,69 +473,110 @@ const setupLineBusinessBase=setup;
 setup=function(){setupLineBusinessBase();initializeSidebarLineBusiness()};
 
 
-// ===== Patch solicitado: distribuição, hierarquia padrão, tooltips e período =====
-function applyDefaultChannelHierarchy(){
-  const key='NM_CANAL_VENDA_GRUPO';
-  state.hierQ=key;state.hierA=key;state.hierC=key;
-  ['hierQ','hierA','hierC'].forEach(id=>{const el=$(id);if(el&&[...el.options].some(o=>o.value===key))el.value=key});
-  const cmp=$('cmpHier');if(cmp&&[...cmp.options].some(o=>o.value===key))cmp.value=key;
+// ===== Implementação estável solicitada em 09/11/2026 =====
+// Aplicada sobre o index anterior para preservar gráficos e drill-downs.
+const DEFAULT_CHANNEL_HIERARCHY='NM_CANAL_VENDA_GRUPO';
+
+function setDefaultChannelHierarchies(){
+  state.hierQ=DEFAULT_CHANNEL_HIERARCHY;
+  state.hierA=DEFAULT_CHANNEL_HIERARCHY;
+  state.hierC=DEFAULT_CHANNEL_HIERARCHY;
+  ['hierQ','hierA','hierC'].forEach(id=>{
+    const el=$(id);
+    if(el && [...el.options].some(o=>o.value===DEFAULT_CHANNEL_HIERARCHY)) el.value=DEFAULT_CHANNEL_HIERARCHY;
+  });
+  const cmp=$('cmpHier');
+  if(cmp && [...cmp.options].some(o=>o.value===DEFAULT_CHANNEL_HIERARCHY)) cmp.value=DEFAULT_CHANNEL_HIERARCHY;
 }
 
-// DIST Quebra = SUM(QB) do item / SUM(RT) do recorte filtrado.
+// DIST Quebra = SUM(QB) do item / SUM(RT) do recorte.
 renderTableQ=function(){
   let data=grouped(state.fq,state.hierQ,aggQ);
-  const s=$('searchQ').value.toLowerCase(),rtRecorte=aggQ(state.fq).rt;
-  if(s)data=data.filter(x=>String(x.k).toLowerCase().includes(s));
+  const search=$('searchQ').value.toLowerCase();
+  const rtRecorte=aggQ(state.fq).rt;
+  if(search)data=data.filter(x=>String(x.k).toLowerCase().includes(search));
   data.sort((x,y)=>y.a.iq-x.a.iq);
-  table($('tableQ'),['Hierarquia','Rota','Quebras','Hora Reagendamento','Recuperacao','IND Quebra','DIST Quebra','ADE Checklist'],data.slice(0,500).map(x=>`<tr><td>${esc(x.k)}</td><td>${num(x.a.rt)}</td><td>${num(x.a.qb)}</td><td>${pct(div(x.a.qb,rtRecorte))}</td><td>${num(Math.max(0,Math.ceil(x.a.qb-metas.qb*x.a.rt)))}</td><td><span class="pill ${x.a.iq<=metas.qb?'good':'bad'}">${pct(x.a.iq)}</span></td><td>${pct(div(x.a.qb,rtRecorte))}</td><td><span class="pill ${x.a.iad>=metas.ade?'good':'bad'}">${pct(x.a.iad)}</span></td></tr>`));
+  table($('tableQ'),['Hierarquia','Rota','Quebras','Hora Reagendamento','Recuperação','IND Quebra','DIST Quebra','ADE Checklist'],data.slice(0,500).map(x=>`<tr><td>${esc(x.k)}</td><td>${num(x.a.rt)}</td><td>${num(x.a.qb)}</td><td>${pct(div(x.a.qb,rtRecorte))}</td><td>${num(Math.max(0,Math.ceil(x.a.qb-metas.qb*x.a.rt)))}</td><td><span class="pill ${x.a.iq<=metas.qb?'good':'bad'}">${pct(x.a.iq)}</span></td><td>${pct(div(x.a.qb,rtRecorte))}</td><td><span class="pill ${x.a.iad>=metas.ade?'good':'bad'}">${pct(x.a.iad)}</span></td></tr>`));
 };
 
-function datesAllowedBySelectedMonth(){
+function selectedMonthDates(){
   const months=selected($('fMonth'));
-  const all=state.allDates||[...new Set([...state.q.map(x=>x.DT_AGENDA),...state.n.map(x=>x.DT)].filter(Boolean))].sort();
-  return months.length?all.filter(d=>months.includes(d.slice(0,4)+d.slice(5,7))):all;
+  const dates=state.allDates||[...new Set([...state.q.map(x=>x.DT_AGENDA),...state.n.map(x=>x.DT)].filter(Boolean))].sort();
+  return months.length?dates.filter(d=>months.includes(d.replaceAll('-','').slice(0,6))):dates;
 }
-function restrictDateControlsToSelectedMonth(){
-  const ds=datesAllowedBySelectedMonth();if(!ds.length)return;
-  const fs=$('fStart'),fe=$('fEnd'),a=$('rStart'),b=$('rEnd'),fill=$('dateRangeFill'),label=$('rangeLabel');
-  fs.min=fe.min=ds[0];fs.max=fe.max=ds.at(-1);fs.value=ds[0];fe.value=ds.at(-1);
-  state.rangeDates=ds;
-  if(a&&b){a.min=b.min=0;a.max=b.max=Math.max(0,ds.length-1);a.value=0;b.value=Math.max(0,ds.length-1);if(fill){fill.style.left='0%';fill.style.width='100%'};if(label)label.textContent=`${ds[0].split('-').reverse().join('/')} — ${ds.at(-1).split('-').reverse().join('/')}`;
-    const sync=e=>{let x=+a.value,y=+b.value;if(x>y){if(e?.target===a)a.value=y;else b.value=x}x=+a.value;y=+b.value;fs.value=ds[x]||ds[0];fe.value=ds[y]||ds.at(-1);const mx=Math.max(1,ds.length-1);if(fill){fill.style.left=(x/mx*100)+'%';fill.style.width=((y-x)/mx*100)+'%'};if(label)label.textContent=`${fs.value.split('-').reverse().join('/')} — ${fe.value.split('-').reverse().join('/')}`;apply()};a.oninput=sync;b.oninput=sync;
+function limitDateFiltersToMonths(reset=true){
+  const dates=selectedMonthDates();
+  if(!dates.length)return;
+  const start=$('fStart'),end=$('fEnd'),rStart=$('rStart'),rEnd=$('rEnd'),fill=$('dateRangeFill'),label=$('rangeLabel');
+  start.min=end.min=dates[0];start.max=end.max=dates.at(-1);
+  if(reset || start.value<dates[0] || start.value>dates.at(-1))start.value=dates[0];
+  if(reset || end.value<dates[0] || end.value>dates.at(-1))end.value=dates.at(-1);
+  if(rStart&&rEnd){
+    rStart.min=rEnd.min=0;rStart.max=rEnd.max=Math.max(0,dates.length-1);
+    if(reset){rStart.value=0;rEnd.value=Math.max(0,dates.length-1)}
+    const syncRange=e=>{
+      let a=+rStart.value,b=+rEnd.value;
+      if(a>b){if(e?.target===rStart)rStart.value=b;else rEnd.value=a}
+      a=+rStart.value;b=+rEnd.value;
+      start.value=dates[a]||dates[0];end.value=dates[b]||dates.at(-1);
+      const max=Math.max(1,dates.length-1);
+      if(fill){fill.style.left=(a/max*100)+'%';fill.style.width=((b-a)/max*100)+'%'}
+      if(label)label.textContent=`${start.value.split('-').reverse().join('/')} — ${end.value.split('-').reverse().join('/')}`;
+      apply();
+    };
+    rStart.oninput=syncRange;rEnd.oninput=syncRange;
+    const max=Math.max(1,dates.length-1),a=+rStart.value,b=+rEnd.value;
+    if(fill){fill.style.left=(a/max*100)+'%';fill.style.width=((b-a)/max*100)+'%'}
   }
+  if(label)label.textContent=`${start.value.split('-').reverse().join('/')} — ${end.value.split('-').reverse().join('/')}`;
 }
 
-function modalQTooltip(g,labels,rr){return{backgroundColor:'#202124',titleColor:'#fff',bodyColor:'#fff',padding:11,displayColors:false,callbacks:{title:i=>`${granularityName(state.gran.q)}: ${i[0]?.label||''}`,label:()=>null,afterBody:i=>{const ix=i[0]?.dataIndex??0,a=g[ix]?.[1]||aggQ([]),prev=ix>0?g[ix-1][1]:null,periodData=periodRows(rr,'DT_AGENDA',labels[ix],state.gran.q),channels=grouped(periodData,'NM_CANAL_VENDA_GRUPO',aggQ).filter(x=>x.a.qb>0).sort((x,y)=>y.a.qb-x.a.qb),lines=[`Rota: ${num(a.rt)}`,`Quebra: ${num(a.qb)}`,`% Quebra: ${pct(a.iq)}`,`% ADE Checklist: ${pct(a.iad)}`,`Comparação % Quebra: ${formatPP(prev?a.iq-prev.iq:null)}`,`Comparação % ADE: ${formatPP(prev?a.iad-prev.iad:null)}`,'','Canais ofensores:'];channels.slice(0,8).forEach(x=>lines.push(`${x.k}: ${num(x.a.qb)} quebras • ${pct(x.a.iq)} quebra • ${pct(x.a.iad)} ADE`));return lines}}}};
-const showDetailTooltipBase=showDetail;
+function detailQTooltip(groups,labels,rows){return{backgroundColor:'#202124',titleColor:'#fff',bodyColor:'#fff',padding:11,displayColors:false,callbacks:{title:i=>`${granularityName(state.gran.q)}: ${i[0]?.label||''}`,label:()=>null,afterBody:i=>{const ix=i[0]?.dataIndex??0,a=groups[ix]?.[1]||aggQ([]),prev=ix?groups[ix-1][1]:null,periodData=periodRows(rows,'DT_AGENDA',labels[ix],state.gran.q),channels=grouped(periodData,'NM_CANAL_VENDA_GRUPO',aggQ).filter(x=>x.a.qb>0).sort((x,y)=>y.a.qb-x.a.qb),out=[`Rota: ${num(a.rt)}`,`Quebra: ${num(a.qb)}`,`% Quebra: ${pct(a.iq)}`,`% ADE Checklist: ${pct(a.iad)}`,`Comparação % Quebra: ${formatPP(prev?a.iq-prev.iq:null)}`,`Comparação % ADE: ${formatPP(prev?a.iad-prev.iad:null)}`,'','Canais ofensores:'];channels.slice(0,8).forEach(x=>out.push(`${x.k}: ${num(x.a.qb)} quebras • ${pct(x.a.iq)} quebra • ${pct(x.a.iad)} ADE`));return out}}}};
+
+// Mantém o subHTML funcional nas três tabelas e padroniza tooltips dos gráficos internos.
+const stableShowDetailBase=showDetail;
 showDetail=function(rows,key,item,type){
-  showDetailTooltipBase(rows,key,item,type);
-  const chartModal=state.charts.modalChart;if(!chartModal)return;
-  const rr=(Array.isArray(rows)?rows:[]).filter(x=>(x[key]||'Não informado')===item);
+  stableShowDetailBase(rows,key,item,type);
+  const modalChart=state.charts.modalChart;
+  if(!modalChart)return;
+  const source=Array.isArray(rows)?rows:[];
+  const detailRows=source.filter(x=>(x[key]||'Não informado')===item);
+  modalChart.options.plugins=modalChart.options.plugins||{};
   if(type==='q'){
-    const g=group(rr,'DT_AGENDA',state.gran.q,aggQ),labels=g.map(x=>x[0]);
-    chartModal.options.plugins=chartModal.options.plugins||{};chartModal.options.plugins.tooltip=modalQTooltip(g,labels,rr);
+    const groups=group(detailRows,'DT_AGENDA',state.gran.q,aggQ),labels=groups.map(x=>x[0]);
+    modalChart.options.plugins.tooltip=detailQTooltip(groups,labels,detailRows);
   }else if(type==='n'){
-    const m=$('metricC').value,g=group(rr,'DT',state.gran.c,aggN),vals=g.map(x=>metricC(x[1],m));
-    chartModal.options.plugins=chartModal.options.plugins||{};chartModal.options.plugins.tooltip=cTooltipConfig(g,vals,m);
+    const metric=$('metricC').value,groups=group(detailRows,'DT',state.gran.c,aggN),values=groups.map(x=>metricC(x[1],metric));
+    modalChart.options.plugins.tooltip=cTooltipConfig(groups,values,metric);
   }
-  chartModal.update();
+  modalChart.update('none');
 };
 
-let requestedMonthSignature='';
-const requestedApplyBase=apply;
-apply=function(){
-  const month=$('fMonth'),sig=month?selected(month).slice().sort().join('|'):'';
-  if(month&&sig!==requestedMonthSignature){requestedMonthSignature=sig;restrictDateControlsToSelectedMonth()}
-  requestedApplyBase();
-};
+function bindStableHierarchyDrilldowns(){
+  const configs=[
+    ['tableQ',()=>state.fq,()=>state.hierQ,'q'],
+    ['tableA',()=>state.fq,()=>state.hierA,'a'],
+    ['tableC',()=>nRows(),()=>state.hierC,'n']
+  ];
+  configs.forEach(([id,rows,key,type])=>{
+    const el=$(id);if(!el||el.dataset.stableDrilldown)return;
+    el.dataset.stableDrilldown='1';
+    el.addEventListener('click',e=>{
+      if(e.target.closest('button'))return;
+      const tr=e.target.closest('tbody tr');if(!tr)return;
+      const item=tr.cells[0]?.innerText.trim();if(item)showDetail(rows(),key(),item,type);
+    });
+  });
+}
 
-const requestedSetupBase=setup;
+const stableSetupBase=setup;
 setup=function(){
-  requestedSetupBase();
-  applyDefaultChannelHierarchy();
+  stableSetupBase();
+  setDefaultChannelHierarchies();
+  limitDateFiltersToMonths(true);
+  bindStableHierarchyDrilldowns();
   const month=$('fMonth');
-  if(month){month.onchange=()=>{restrictDateControlsToSelectedMonth();apply()}}
-  restrictDateControlsToSelectedMonth();
+  if(month)month.addEventListener('change',()=>{limitDateFiltersToMonths(true);apply()});
 };
 
 load();
