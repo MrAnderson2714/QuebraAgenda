@@ -41,10 +41,27 @@ th,td{padding:5px 7px;font-size:10px}.table-wrap{max-height:430px}.kpi .value.go
 /* Ajustes persistentes finais */
 #loadStatus .status-close{display:grid;place-items:center;position:absolute;right:9px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:1px solid currentColor;border-radius:50%;background:transparent;color:inherit;font-size:20px;font-weight:900;cursor:pointer;line-height:1;z-index:3}
 #sidebarLineBusiness .multi-box{width:100%}#sidebarLineBusiness select{width:100%}.heatmap td.row-max-volume{border:3px solid #2D291C!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.9)!important}
+
+/* Ajustes finais: filtro Linha Negócio e legibilidade do heatmap */
+#sidebarLineBusinessStatic select{width:100%;min-height:92px;padding:7px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text)}
+#sidebarLineBusinessStatic .multi-box{width:100%}
+.heatmap thead th,.heatmap thead th.row-head{text-align:center!important;vertical-align:middle!important;color:var(--text)!important;background:var(--card)!important}
+.heatmap tbody td{color:#000!important}
+.heatmap tbody td.row-head{color:#000!important;background:#fff!important}
+body.dark .heatmap tbody td{color:#000!important}
+body.dark .heatmap tbody td.row-head{color:#000!important;background:#fff!important}
 </style></head>
 <body>
 <header class="top"><div class="logo">claro</div><div class="title"><h1>Dashboard Novos Domicílios Claro</h1><small>Quebra • Antiquebra • Conversão | Atualização automática pelas bases JSON/GZIP</small></div><div class="actions"><button class="btn alt" id="reload">↻ Recarregar</button><button class="btn alt" id="theme">☀ Modo</button><button class="btn" id="png">▣ PNG</button><button class="btn" id="save">⇩ HTML</button></div></header>
-<div class="layout" id="dashboard"><aside><div class="filter-head"><b>Filtros globais</b><button class="zoom" id="clear">Limpar</button></div><div id="filterStatus"></div><div class="filter"><label>Ano/Mês <span title="Competência YYYYMM">ⓘ</span></label><select id="fMonth" multiple></select></div><div class="filter range-bar"><label>Intervalo disponível <span>ⓘ</span></label><div class="dual-range"><div class="range-fill" id="dateRangeFill"></div><input id="rStart" type="range" min="0" max="0"><input id="rEnd" type="range" min="0" max="0"></div><small id="rangeLabel"></small></div><div class="filter"><label>Datas</label><div class="range-row"><input id="fStart" type="date"><input id="fEnd" type="date"></div></div><div id="filters"></div></aside>
+<div class="layout" id="dashboard"><aside><div class="filter-head"><b>Filtros globais</b><button class="zoom" id="clear">Limpar</button></div><div id="filterStatus"></div><div class="filter"><label>Ano/Mês <span title="Competência YYYYMM">ⓘ</span></label><select id="fMonth" multiple></select></div><div class="filter range-bar"><label>Intervalo disponível <span>ⓘ</span></label><div class="dual-range"><div class="range-fill" id="dateRangeFill"></div><input id="rStart" type="range" min="0" max="0"><input id="rEnd" type="range" min="0" max="0"></div><small id="rangeLabel"></small></div><div class="filter"><label>Datas</label><div class="range-row"><input id="fStart" type="date"><input id="fEnd" type="date"></div></div><div id="filters"></div><div class="filter" id="sidebarLineBusinessStatic">
+<label>LINHA NEGÓCIO <span title="Filtro exclusivo da aba Conversão">ⓘ</span></label>
+<select id="lineBusinessSide" multiple size="4">
+<option value="BSOD">BSOD</option>
+<option value="CLARO EMPRESAS" selected>CLARO EMPRESAS</option>
+<option value="HOTEL E HOSPITAL" selected>HOTEL E HOSPITAL</option>
+<option value="RESIDENCIAL" selected>RESIDENCIAL</option>
+</select>
+</div></aside>
 <main class="content"><div id="loadStatus" class="status">Inicializando dashboard...<button id="closeStatus" title="Fechar">×</button></div><nav class="tabs"><button class="tab active" data-page="quebra">01 • Quebra</button><button class="tab" data-page="antiquebra">02 • Antiquebra</button><button class="tab" data-page="conversao">03 • Conversão</button><button class="tab" data-page="glossario">04 • Glossário</button></nav>
 <section class="page active" id="quebra"><div class="kpis" id="kpiQ"></div><div class="grid"><div><div class="card"><div class="card-head"><h2>📈 Indicador Diário • Quebra x ADE Checklist</h2><button class="info" title="Barras mostram quebra e a linha mostra aderência ao checklist.">ⓘ</button><div class="seg" data-gran="q"><button class="active" data-v="day">DIA</button><button data-v="week">SEMANA</button><button data-v="month">MÊS</button></div><button class="zoom">⛶</button></div><div class="chart"><canvas id="chartQ"></canvas></div></div><div class="card"><div class="card-head"><h2>📋 Analítico de Indicador por Hierarquia</h2><button class="info" title="Detalhamento da rota, quebra, recuperação e aderência.">ⓘ</button><div class="tools"><select id="hierQ"></select><input id="searchQ" placeholder="Localizar..."><button class="btn" id="csvQ">CSV</button></div><button class="zoom">⛶</button></div><div class="table-wrap"><table id="tableQ"></table></div></div>
 <div class="card compare-area"><div class="card-head"><h2>🧭 Comparativo por Hierarquia e Causa</h2><button class="info" title="Filtros exclusivos para comparação mensal e motivos de reagendamento.">ⓘ</button><button class="zoom">⛶</button></div><div class="compare-filters"><label>Hierarquia<select id="cmpHier"></select></label><label>Ano/Mês<select id="cmpMonths" multiple></select></label><label>Top N<select id="cmpTop"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></label></div><div class="chart-grid"><div><h3>Itens da hierarquia por Ano/Mês</h3><div class="chart"><canvas id="cmpMonthChart"></canvas></div></div><div><h3>% Quebra por motivo de reagendamento</h3><div class="chart"><canvas id="cmpReasonChart"></canvas></div></div></div></div>
@@ -421,6 +438,39 @@ renderQChart=function(){const g=group(state.fq,'DT_AGENDA',state.gran.q,aggQ),la
 
 function cTooltipConfig(g,vals,m){return{backgroundColor:'#202124',titleColor:'#fff',bodyColor:'#fff',padding:11,displayColors:false,callbacks:{title:i=>`${granularityName(state.gran.c)}: ${i[0]?.label||''}`,label:()=>null,afterBody:i=>{const ix=i[0]?.dataIndex??0,a=g[ix]?.[1]||aggN([]),z=vals[ix]||metricC(a,m),prev=ix>0?vals[ix-1]:null;const names={gross:'Venda Bruta',net:'Venda Líquida',des:'Desistência',ins3:'Instalação 3 Dias'};return [`Indicador selecionado: ${names[m]||z[3]}`,`Indicador: ${pct(z[1])}`,`Meta: ${pct(z[2])}`,`Volume da série: ${num(z[0])}`,`Comparação anterior: ${formatPP(prev?z[1]-prev[1]:null)}`,`Venda Bruta: ${num(a.vb)}`,`Venda Líquida: ${num(a.vl)}`,`Desistência: ${num(a.des)}`,`Instalações: ${num(a.ins)}`,`Instalações 3D: ${num(a.ins3)}`]}}}}
 renderCChart=function(){const m=$('metricC').value,g=group(nRows(),'DT',state.gran.c,aggN),vals=g.map(x=>metricC(x[1],m)),lower=m==='des',volumes=vals.map(x=>Number(x[0])||0),maxV=Math.max(0,...volumes);chart('chartC',{data:{labels:g.map(x=>x[0]),datasets:[{type:'bar',order:10,label:'Volume',data:volumes,backgroundColor:volumes.map(v=>v===maxV&&maxV>0?'#159957':'#A7A8AA'),borderRadius:5,yAxisID:'yr',datalabels:{display:c=>+c.dataset.data[c.dataIndex]>0,anchor:'start',align:'top',offset:4,clamp:true,formatter:num,color:'#fff',font:{weight:'800'}}},{type:'line',order:0,label:vals[0]?.[3]||'Indicador',data:vals.map(x=>x[1]),borderColor:'#111111',borderWidth:2,pointRadius:4,pointBorderColor:'#fff',pointBorderWidth:2,pointBackgroundColor:vals.map(x=>(lower?x[1]<=x[2]:x[1]>=x[2])?'#159957':'#d7352a'),yAxisID:'y',datalabels:{display:true,anchor:'end',align:'top',offset:7,formatter:pct,color:'#111111',font:{weight:'800'}}},{type:'line',order:1,label:'Meta',data:vals.map(x=>x[2]),borderColor:'#F5842B',borderWidth:2,borderDash:[5,5],pointRadius:0,yAxisID:'y',datalabels:{display:false}}]},options:{...baseOpts,plugins:{...baseOpts.plugins,tooltip:cTooltipConfig(g,vals,m)},scales:{x:baseOpts.scales.x,y:{position:'left',ticks:{callback:pct},suggestedMax:Math.max(.1,...vals.map(x=>x[1]))*1.18},yr:{position:'right',beginAtZero:true,grid:{drawOnChartArea:false},ticks:{callback:num}}}},plugins:[foregroundLinePlugin,ChartDataLabels]})}
+
+
+// ===== Filtro lateral definitivo de Linha Negócio =====
+function selectedSidebarLines(){
+ const el=document.getElementById('lineBusinessSide');
+ return el?[...el.selectedOptions].map(o=>String(o.value)):[];
+}
+function nRows(){
+ const values=selectedSidebarLines();
+ return values.length?state.fn.filter(r=>values.includes(String(r.NM_LINHA_NEGOCIO))):state.fn;
+}
+function initializeSidebarLineBusiness(){
+ const side=document.getElementById('lineBusinessSide');
+ if(!side)return;
+ // Rebuild options from nd.json while preserving the requested initial state.
+ const values=[...new Set(state.n.map(r=>r.NM_LINHA_NEGOCIO).filter(v=>v!==null&&v!==undefined&&String(v).trim()!==''))]
+   .map(String).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+ side.innerHTML=values.map(v=>`<option value="${esc(v)}" ${v.trim().toUpperCase()==='BSOD'?'':'selected'}>${esc(v)}</option>`).join('');
+ side.multiple=true;
+ side.onchange=()=>renderC();
+ // Remove obsolete copies so only the lateral filter remains visible.
+ const original=document.getElementById('lineBusiness');
+ if(original)original.style.display='none';
+ document.querySelectorAll('#conversionFilter,#kpiLineBusiness,#sidebarLineBusiness').forEach(el=>el.remove());
+ // Enhance the newly populated select once.
+ side.dataset.enhanced='';
+ side.classList.remove('native-multi');
+ const adjacent=side.nextElementSibling;
+ if(adjacent?.classList?.contains('multi-box'))adjacent.remove();
+ makeMultiSelectors();
+}
+const setupLineBusinessBase=setup;
+setup=function(){setupLineBusinessBase();initializeSidebarLineBusiness()};
 
 load();
 </script></body></html>
