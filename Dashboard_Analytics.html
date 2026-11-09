@@ -363,5 +363,54 @@ const setupPersistentBase=setup;setup=function(){
  setLoadStatus($('loadStatus')?.innerHTML||'Dashboard carregado');
 }
 
+
+// ===== Patch executivo definitivo: camadas Chart.js e filtro Linha Negócio =====
+const foregroundLinePlugin={
+ id:'foregroundLinePlugin',
+ afterDatasetsDraw(chart){
+  const {ctx,chartArea}=chart;
+  chart.data.datasets.forEach((ds,i)=>{
+   if(ds.type!=='line')return;
+   const meta=chart.getDatasetMeta(i);if(meta.hidden||!meta.dataset)return;
+   ctx.save();meta.dataset.draw(ctx,chartArea);meta.data.forEach(pt=>pt.draw(ctx,chartArea));ctx.restore();
+  });
+ }
+};
+
+renderQChart=function(){
+ const g=group(state.fq,'DT_AGENDA',state.gran.q,aggQ),labels=g.map(x=>x[0]),q=g.map(x=>x[1].iq),ad=g.map(x=>x[1].iad);
+ chart('chartQ',{data:{labels,datasets:[
+  {type:'bar',order:10,label:'% Quebra',data:q,backgroundColor:q.map(v=>v<=metas.qb?'#159957':'#d7352a'),borderRadius:5,datalabels:{display:true,anchor:'end',align:'end',formatter:pct,color:'#67727e',font:{weight:'700'}}},
+  {type:'line',order:0,label:'ADE Checklist',data:ad,borderColor:'#0097A9',borderWidth:4,pointBackgroundColor:ad.map(v=>v>=metas.ade?'#159957':'#d7352a'),pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:5,tension:.25,datalabels:{display:true,anchor:'end',align:'top',offset:6,formatter:pct,color:'#0097A9',font:{weight:'800'}}},
+  {type:'line',order:1,label:'Meta Quebra',data:labels.map(()=>metas.qb),borderColor:'#F5842B',borderWidth:2,borderDash:[5,5],pointRadius:0,datalabels:{display:false}}
+ ]},options:{...baseOpts,scales:{...baseOpts.scales,y:{...baseOpts.scales.y,ticks:{callback:pct},suggestedMax:Math.max(.3,...q,...ad)*1.20}}},plugins:[foregroundLinePlugin,ChartDataLabels]});
+};
+
+renderCChart=function(){
+ const m=$('metricC').value,g=group(nRows(),'DT',state.gran.c,aggN),vals=g.map(x=>metricC(x[1],m)),lower=m==='des',volumes=vals.map(x=>Number(x[0])||0),maxV=Math.max(0,...volumes);
+ chart('chartC',{data:{labels:g.map(x=>x[0]),datasets:[
+  {type:'bar',order:10,label:'Volume',data:volumes,backgroundColor:volumes.map(v=>v===maxV&&maxV>0?'#159957':'#A7A8AA'),borderColor:volumes.map(v=>v===maxV&&maxV>0?'#0d6f3f':'#8d8f91'),borderWidth:1,borderRadius:5,yAxisID:'yr',datalabels:{display:c=>Number(c.dataset.data[c.dataIndex])>0,anchor:'start',align:'top',offset:4,clamp:true,formatter:num,color:'#fff',font:{weight:'800'}}},
+  {type:'line',order:0,label:vals[0]?.[3]||'Indicador',data:vals.map(x=>x[1]),borderColor:'#0097A9',borderWidth:4,pointRadius:5,pointBorderColor:'#fff',pointBorderWidth:2,pointBackgroundColor:vals.map(x=>(lower?x[1]<=x[2]:x[1]>=x[2])?'#159957':'#d7352a'),yAxisID:'y',datalabels:{display:true,anchor:'end',align:'top',offset:7,formatter:pct,color:'#0097A9',font:{weight:'800'}}},
+  {type:'line',order:1,label:'Meta',data:vals.map(x=>x[2]),borderColor:'#F5842B',borderWidth:2,borderDash:[5,5],pointRadius:0,yAxisID:'y',datalabels:{display:false}}
+ ]},options:{...baseOpts,scales:{x:baseOpts.scales.x,y:{position:'left',ticks:{callback:pct},suggestedMax:Math.max(.1,...vals.map(x=>x[1]))*1.18},yr:{position:'right',beginAtZero:true,grid:{drawOnChartArea:false},ticks:{callback:num}}}},plugins:[foregroundLinePlugin,ChartDataLabels]});
+};
+
+function forceSidebarLineBusiness(resetSelection=false){
+ const aside=document.querySelector('#dashboard > aside'),lb=$('lineBusiness');if(!aside||!lb)return;
+ let box=$('sidebarLineBusiness');
+ if(!box){box=document.createElement('div');box.className='filter';box.id='sidebarLineBusiness';box.innerHTML='<label>LINHA NEGÓCIO <span title="Filtro exclusivo da aba Conversão">ⓘ</span></label>';aside.appendChild(box)}
+ const oldMulti=lb.nextElementSibling?.classList?.contains('multi-box')?lb.nextElementSibling:null;if(oldMulti)oldMulti.remove();
+ if(lb.parentElement!==box)box.appendChild(lb);
+ lb.dataset.enhanced='';lb.classList.remove('native-multi');lb.multiple=true;lb.size=5;lb.style.display='';
+ if(resetSelection){[...lb.options].forEach(o=>{o.selected=Boolean(o.value)&&String(o.value).trim().toUpperCase()!=='BSOD'})}
+ lb.onchange=()=>renderC();makeMultiSelectors();
+ const btn=lb.nextElementSibling?.querySelector?.('.multi-button');if(btn)btn.textContent=`${[...lb.selectedOptions].length} selecionados`;
+ const oldKpi=$('kpiLineBusiness');if(oldKpi)oldKpi.remove();const oldWrap=$('conversionFilter');if(oldWrap)oldWrap.remove();
+}
+const definitiveSetupBase=setup;
+setup=function(){definitiveSetupBase();forceSidebarLineBusiness(true)};
+const definitiveRenderCBase=renderC;
+renderC=function(){definitiveRenderCBase();forceSidebarLineBusiness(false)};
+
 load();
 </script></body></html>
