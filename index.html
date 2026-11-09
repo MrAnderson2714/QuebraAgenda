@@ -76,7 +76,20 @@ th,td{padding:5px 7px;font-size:10px}.table-wrap{max-height:430px}.kpi .value.go
 .heatmap tbody td.row-head{color:#000!important;background:#fff!important}
 body.dark .heatmap tbody td{color:#000!important}
 body.dark .heatmap tbody td.row-head{color:#000!important;background:#fff!important}
-</style></head>
+</style>
+<style>
+/* Ajuste exclusivo da altura das linhas da tabela comparativa */
+#heatmapHost .heatmap{border-spacing:2px}
+#heatmapHost .heatmap th,#heatmapHost .heatmap td{padding:4px 6px!important;line-height:1.05!important;height:26px!important}
+</style>
+
+<style>
+/* Correcoes pontuais: heatmap ocupa integralmente a aba */
+.compare-area.full-width,#heatmapHost,.heatmap-wrap{width:100%!important;max-width:none!important}
+#heatmapHost .heatmap{width:100%!important;min-width:100%!important;table-layout:auto}
+.compare-area{grid-column:1/-1!important}
+</style>
+</head>
 <body>
 <header class="top"><div class="logo">claro</div><div class="title"><h1>Dashboard Novos Domicílios Claro</h1><small>Quebra • Antiquebra • Conversão | Atualização automática pelas bases JSON/GZIP</small></div><div class="actions"><button class="btn alt" id="reload">↻ Recarregar</button><button class="btn alt" id="theme">☀ Modo</button><button class="btn" id="png">▣ PNG</button><button class="btn" id="save">⇩ HTML</button></div></header>
 <div class="layout" id="dashboard"><aside><div class="filter-head"><b>Filtros globais</b><button class="zoom" id="clear">Limpar</button></div><div id="filterStatus"></div><div class="filter"><label>Ano/Mês <span title="Competência YYYYMM">ⓘ</span></label><select id="fMonth" multiple></select></div><div class="filter range-bar"><label>Intervalo disponível <span>ⓘ</span></label><div class="dual-range"><div class="range-fill" id="dateRangeFill"></div><input id="rStart" type="range" min="0" max="0"><input id="rEnd" type="range" min="0" max="0"></div><small id="rangeLabel"></small></div><div class="filter"><label>Datas</label><div class="range-row"><input id="fStart" type="date"><input id="fEnd" type="date"></div></div><div id="filters"></div><div class="filter" id="sidebarLineBusinessStatic">
@@ -622,6 +635,140 @@ function openHierarchyDetail(tableId){
   });
 }
 ['tableQ','tableA','tableC'].forEach(openHierarchyDetail);
+
+
+// ===== Ajustes exclusivos: cores do Pareto e linhas do heatmap =====
+const PARETO_ITEM_COLORS=['#DA291C','#0097A9','#F5842B','#7b61a8','#6f8f3d','#AF272F','#2D291C','#4f81bd','#9b59b6','#16a085','#d35400','#7f8c8d'];
+function paretoHierarchyColorMap(items){
+  const unique=[...new Set(items.map(x=>String(x.cat||'Não informado')))];
+  return new Map(unique.map((name,index)=>[name,PARETO_ITEM_COLORS[index%PARETO_ITEM_COLORS.length]]));
+}
+renderPareto=function(){
+  const key=$('paretoType')?.value||'NM_QUEBRA_RESPONSAVEL',rows=Array.isArray(state.fq)?state.fq:[],totalQB=aggQ(rows).qb,totalRT=aggQ(rows).rt,m=new Map();
+  rows.filter(r=>+r.QB>0).forEach(r=>{const full=String(r.NM_MOTIVO_REAGENDA||'Não informada'),code=full.slice(0,3),cat=r[key]||'Não informado',k=code+'|'+cat;if(!m.has(k))m.set(k,{code,cat,v:0,rt:0,descs:new Map(),raw:[]});const o=m.get(k);o.v+=+r.QB||0;o.rt+=+r.RT||0;o.descs.set(full,(o.descs.get(full)||0)+(+r.QB||0));o.raw.push(r)});
+  const d=[...m.values()].sort((a,b)=>b.v-a.v).slice(0,12),colorMap=paretoHierarchyColorMap(d);
+  chart('pareto',{type:'bar',data:{labels:d.map(x=>x.code),datasets:[{label:'',data:d.map(x=>div(x.v,totalQB)),backgroundColor:d.map(x=>colorMap.get(String(x.cat))),borderRadius:5,datalabels:{display:true,formatter:fmtDecimalPct,anchor:'end',align:'end',color:'#67727e'}}]},options:{...baseOpts,indexAxis:'y',layout:{padding:{right:45}},plugins:{...baseOpts.plugins,legend:{display:false},tooltip:{callbacks:{title:i=>`Código: ${i[0]?.label||''}`,label:i=>{const x=d[i.dataIndex];return [`${aliases[key]||key}: ${x.cat}`,`Quebras: ${num(x.v)}`,`Participação nas quebras: ${fmtDecimalPct(div(x.v,totalQB))}`,`Rotas relacionadas: ${num(x.rt)}`,`Indicador QB/RT: ${fmtDecimalPct(div(x.v,x.rt))}`]},afterBody:i=>{const x=d[i[0].dataIndex],descs=[...x.descs].sort((a,b)=>b[1]-a[1]),channels=grouped(x.raw,'NM_CANAL_VENDA_GRUPO',aggQ).sort((a,b)=>b.a.qb-a.a.qb);return['','DESCRIÇÃO COMPLETA:',...descs.slice(0,8).map(([t,v])=>`${t}: ${num(v)} quebra(s)`),'','CANAIS OFENSORES:',...channels.slice(0,7).map(c=>`${c.k}: ${num(c.a.qb)} quebra(s) • ${fmtDecimalPct(div(c.a.qb,x.v))}`)]}}}},scales:{...baseOpts.scales,x:{ticks:{callback:fmtDecimalPct},suggestedMax:Math.max(.3,...d.map(x=>div(x.v,totalQB)))*1.15}}},plugins:[ChartDataLabels]});
+  const cats=[...new Set(d.map(x=>String(x.cat)))].map(cat=>({cat,v:d.filter(x=>String(x.cat)===cat).reduce((a,x)=>a+x.v,0),color:colorMap.get(cat)})).sort((a,b)=>b.v-a.v);
+  table($('paretoTable'),['Legenda / Item da hierarquia','Volume','Indicador'],cats.map(x=>`<tr><td><span class="code-dot" style="background:${x.color}"></span>${esc(x.cat)}</td><td>${num(x.v)}</td><td>${fmtDecimalPct(div(x.v,totalRT))}</td></tr>`));
+};
+
+// O heatmap usa somente state.fq, portanto respeita todos os filtros laterais globais
+// e ignora o filtro exclusivo de Linha Negócio da aba Conversão.
+const filteredApplyBase=apply;
+apply=function(){filteredApplyBase();renderComparisons()};
+
+
+// ===== Correcoes pontuais de inicializacao, Ano/Mes e Heatmap =====
+// Esta versao substitui a rotina antiga que falhava quando cmpMonths nao existia.
+setupComparisons=function(){
+  const hierarchy=$('cmpHier'),top=$('cmpTop');
+  if(!hierarchy||!top)return;
+  const current=hierarchy.value||DEFAULT_CHANNEL_HIERARCHY;
+  hierarchy.innerHTML=hier.map(k=>`<option value="${k}">${aliases[k]}</option>`).join('');
+  hierarchy.value=[...hierarchy.options].some(o=>o.value===current)?current:DEFAULT_CHANNEL_HIERARCHY;
+  hierarchy.onchange=renderComparisons;
+  top.onchange=renderComparisons;
+  renderComparisons();
+};
+function selectLatestYearMonth(){
+  const el=$('fMonth');if(!el)return;
+  const values=[...el.options].map(o=>String(o.value)).filter(Boolean).sort();
+  const latest=values.at(-1);if(!latest)return;
+  [...el.options].forEach(o=>o.selected=String(o.value)===latest);
+  const box=el.nextElementSibling;
+  if(box?.classList?.contains('multi-box')){
+    const button=box.querySelector('.multi-button');
+    if(button)button.textContent=el.options[el.selectedIndex]?.text||latest;
+  }
+  limitDateFiltersToMonths(true);
+}
+const failureFixSetupBase=setup;
+setup=function(){
+  failureFixSetupBase();
+  selectLatestYearMonth();
+  const hierarchy=$('cmpHier'),top=$('cmpTop');
+  if(hierarchy)hierarchy.onchange=renderComparisons;
+  if(top)top.onchange=renderComparisons;
+  requestAnimationFrame(()=>renderComparisons());
+};
+
+
+// ===== Ajuste exclusivo solicitado: Ano/Mes mais recente e ranges dependentes =====
+let requestedMonthSignature='';
+function requestedSelectedMonths(){
+  const el=$('fMonth');
+  return el?[...el.selectedOptions].map(o=>String(o.value)).filter(Boolean).sort():[];
+}
+function requestedDatesForSelectedMonths(){
+  const months=requestedSelectedMonths();
+  const rows=[
+    ...state.q.map(r=>({month:String(r.ANOMES??''),date:r.DT_AGENDA})),
+    ...state.n.map(r=>({month:String(r.ANOMES??''),date:r.DT}))
+  ];
+  return [...new Set(rows.filter(x=>x.date&&(!months.length||months.includes(x.month))).map(x=>x.date))].sort();
+}
+function requestedSyncDependentDateRanges(reset=true){
+  const dates=requestedDatesForSelectedMonths();
+  if(!dates.length)return;
+  const start=$('fStart'),end=$('fEnd'),rStart=$('rStart'),rEnd=$('rEnd'),fill=$('dateRangeFill'),label=$('rangeLabel');
+  if(!start||!end||!rStart||!rEnd)return;
+  const first=dates[0],last=dates.at(-1);
+  start.min=end.min=first;
+  start.max=end.max=last;
+  if(reset||!dates.includes(start.value))start.value=first;
+  if(reset||!dates.includes(end.value))end.value=last;
+  let startIndex=Math.max(0,dates.indexOf(start.value));
+  let endIndex=Math.max(startIndex,dates.indexOf(end.value));
+  rStart.min=rEnd.min=0;
+  rStart.max=rEnd.max=Math.max(0,dates.length-1);
+  rStart.value=startIndex;
+  rEnd.value=endIndex;
+  const paint=()=>{
+    const max=Math.max(1,dates.length-1),a=+rStart.value,b=+rEnd.value;
+    if(fill){fill.style.left=(a/max*100)+'%';fill.style.width=((b-a)/max*100)+'%'}
+    if(label)label.textContent=`${(dates[a]||first).split('-').reverse().join('/')} — ${(dates[b]||last).split('-').reverse().join('/')}`;
+  };
+  const sync=e=>{
+    let a=+rStart.value,b=+rEnd.value;
+    if(a>b){if(e?.target===rStart)rStart.value=b;else rEnd.value=a}
+    a=+rStart.value;b=+rEnd.value;
+    start.value=dates[a]||first;
+    end.value=dates[b]||last;
+    paint();
+    apply();
+  };
+  rStart.oninput=sync;
+  rEnd.oninput=sync;
+  paint();
+}
+function requestedSelectLatestMonth(){
+  const el=$('fMonth');if(!el)return;
+  const values=[...el.options].map(o=>String(o.value)).filter(Boolean).sort();
+  const latest=values.at(-1);if(!latest)return;
+  [...el.options].forEach(o=>o.selected=String(o.value)===latest);
+  requestedMonthSignature=latest;
+  const box=el.nextElementSibling;
+  if(box?.classList?.contains('multi-box')){
+    const button=box.querySelector('.multi-button');
+    const option=[...el.options].find(o=>o.selected);
+    if(button)button.textContent=option?.text||latest;
+  }
+  requestedSyncDependentDateRanges(true);
+}
+const requestedSetupBase=setup;
+setup=function(){
+  requestedSetupBase();
+  requestedSelectLatestMonth();
+};
+const requestedApplyBase=apply;
+apply=function(){
+  const signature=requestedSelectedMonths().join('|');
+  if(signature!==requestedMonthSignature){
+    requestedMonthSignature=signature;
+    requestedSyncDependentDateRanges(true);
+  }
+  requestedApplyBase();
+};
 
 load();
 </script></body></html>
