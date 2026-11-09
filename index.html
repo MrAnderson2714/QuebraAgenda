@@ -472,5 +472,71 @@ function initializeSidebarLineBusiness(){
 const setupLineBusinessBase=setup;
 setup=function(){setupLineBusinessBase();initializeSidebarLineBusiness()};
 
+
+// ===== Patch solicitado: distribuição, hierarquia padrão, tooltips e período =====
+function applyDefaultChannelHierarchy(){
+  const key='NM_CANAL_VENDA_GRUPO';
+  state.hierQ=key;state.hierA=key;state.hierC=key;
+  ['hierQ','hierA','hierC'].forEach(id=>{const el=$(id);if(el&&[...el.options].some(o=>o.value===key))el.value=key});
+  const cmp=$('cmpHier');if(cmp&&[...cmp.options].some(o=>o.value===key))cmp.value=key;
+}
+
+// DIST Quebra = SUM(QB) do item / SUM(RT) do recorte filtrado.
+renderTableQ=function(){
+  let data=grouped(state.fq,state.hierQ,aggQ);
+  const s=$('searchQ').value.toLowerCase(),rtRecorte=aggQ(state.fq).rt;
+  if(s)data=data.filter(x=>String(x.k).toLowerCase().includes(s));
+  data.sort((x,y)=>y.a.iq-x.a.iq);
+  table($('tableQ'),['Hierarquia','Rota','Quebras','Hora Reagendamento','Recuperacao','IND Quebra','DIST Quebra','ADE Checklist'],data.slice(0,500).map(x=>`<tr><td>${esc(x.k)}</td><td>${num(x.a.rt)}</td><td>${num(x.a.qb)}</td><td>${pct(div(x.a.qb,rtRecorte))}</td><td>${num(Math.max(0,Math.ceil(x.a.qb-metas.qb*x.a.rt)))}</td><td><span class="pill ${x.a.iq<=metas.qb?'good':'bad'}">${pct(x.a.iq)}</span></td><td>${pct(div(x.a.qb,rtRecorte))}</td><td><span class="pill ${x.a.iad>=metas.ade?'good':'bad'}">${pct(x.a.iad)}</span></td></tr>`));
+};
+
+function datesAllowedBySelectedMonth(){
+  const months=selected($('fMonth'));
+  const all=state.allDates||[...new Set([...state.q.map(x=>x.DT_AGENDA),...state.n.map(x=>x.DT)].filter(Boolean))].sort();
+  return months.length?all.filter(d=>months.includes(d.slice(0,4)+d.slice(5,7))):all;
+}
+function restrictDateControlsToSelectedMonth(){
+  const ds=datesAllowedBySelectedMonth();if(!ds.length)return;
+  const fs=$('fStart'),fe=$('fEnd'),a=$('rStart'),b=$('rEnd'),fill=$('dateRangeFill'),label=$('rangeLabel');
+  fs.min=fe.min=ds[0];fs.max=fe.max=ds.at(-1);fs.value=ds[0];fe.value=ds.at(-1);
+  state.rangeDates=ds;
+  if(a&&b){a.min=b.min=0;a.max=b.max=Math.max(0,ds.length-1);a.value=0;b.value=Math.max(0,ds.length-1);if(fill){fill.style.left='0%';fill.style.width='100%'};if(label)label.textContent=`${ds[0].split('-').reverse().join('/')} — ${ds.at(-1).split('-').reverse().join('/')}`;
+    const sync=e=>{let x=+a.value,y=+b.value;if(x>y){if(e?.target===a)a.value=y;else b.value=x}x=+a.value;y=+b.value;fs.value=ds[x]||ds[0];fe.value=ds[y]||ds.at(-1);const mx=Math.max(1,ds.length-1);if(fill){fill.style.left=(x/mx*100)+'%';fill.style.width=((y-x)/mx*100)+'%'};if(label)label.textContent=`${fs.value.split('-').reverse().join('/')} — ${fe.value.split('-').reverse().join('/')}`;apply()};a.oninput=sync;b.oninput=sync;
+  }
+}
+
+function modalQTooltip(g,labels,rr){return{backgroundColor:'#202124',titleColor:'#fff',bodyColor:'#fff',padding:11,displayColors:false,callbacks:{title:i=>`${granularityName(state.gran.q)}: ${i[0]?.label||''}`,label:()=>null,afterBody:i=>{const ix=i[0]?.dataIndex??0,a=g[ix]?.[1]||aggQ([]),prev=ix>0?g[ix-1][1]:null,periodData=periodRows(rr,'DT_AGENDA',labels[ix],state.gran.q),channels=grouped(periodData,'NM_CANAL_VENDA_GRUPO',aggQ).filter(x=>x.a.qb>0).sort((x,y)=>y.a.qb-x.a.qb),lines=[`Rota: ${num(a.rt)}`,`Quebra: ${num(a.qb)}`,`% Quebra: ${pct(a.iq)}`,`% ADE Checklist: ${pct(a.iad)}`,`Comparação % Quebra: ${formatPP(prev?a.iq-prev.iq:null)}`,`Comparação % ADE: ${formatPP(prev?a.iad-prev.iad:null)}`,'','Canais ofensores:'];channels.slice(0,8).forEach(x=>lines.push(`${x.k}: ${num(x.a.qb)} quebras • ${pct(x.a.iq)} quebra • ${pct(x.a.iad)} ADE`));return lines}}}};
+const showDetailTooltipBase=showDetail;
+showDetail=function(rows,key,item,type){
+  showDetailTooltipBase(rows,key,item,type);
+  const chartModal=state.charts.modalChart;if(!chartModal)return;
+  const rr=(Array.isArray(rows)?rows:[]).filter(x=>(x[key]||'Não informado')===item);
+  if(type==='q'){
+    const g=group(rr,'DT_AGENDA',state.gran.q,aggQ),labels=g.map(x=>x[0]);
+    chartModal.options.plugins=chartModal.options.plugins||{};chartModal.options.plugins.tooltip=modalQTooltip(g,labels,rr);
+  }else if(type==='n'){
+    const m=$('metricC').value,g=group(rr,'DT',state.gran.c,aggN),vals=g.map(x=>metricC(x[1],m));
+    chartModal.options.plugins=chartModal.options.plugins||{};chartModal.options.plugins.tooltip=cTooltipConfig(g,vals,m);
+  }
+  chartModal.update();
+};
+
+let requestedMonthSignature='';
+const requestedApplyBase=apply;
+apply=function(){
+  const month=$('fMonth'),sig=month?selected(month).slice().sort().join('|'):'';
+  if(month&&sig!==requestedMonthSignature){requestedMonthSignature=sig;restrictDateControlsToSelectedMonth()}
+  requestedApplyBase();
+};
+
+const requestedSetupBase=setup;
+setup=function(){
+  requestedSetupBase();
+  applyDefaultChannelHierarchy();
+  const month=$('fMonth');
+  if(month){month.onchange=()=>{restrictDateControlsToSelectedMonth();apply()}}
+  restrictDateControlsToSelectedMonth();
+};
+
 load();
 </script></body></html>
