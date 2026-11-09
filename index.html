@@ -770,5 +770,26 @@ apply=function(){
   requestedApplyBase();
 };
 
+
+// ===== Ajuste exclusivo solicitado: Pareto sem configuracao antiga persistente =====
+function resetParetoPersistentConfiguration(){
+  const selector=$('paretoType');
+  if(!selector)return;
+  // Substitui a referencia antiga capturada antes das revisoes do Pareto.
+  selector.onchange=()=>{
+    const current=state.charts.pareto;
+    if(current){
+      current.destroy();
+      delete state.charts.pareto;
+    }
+    renderPareto();
+  };
+}
+const paretoSetupBase=setup;
+setup=function(){
+  paretoSetupBase();
+  resetParetoPersistentConfiguration();
+};
+
 load();
 </script></body></html>
