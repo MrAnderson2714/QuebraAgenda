@@ -1,287 +1,103 @@
-# Dashboard de Quebra de Agenda
+# Dashboard Novos Domicílios Claro
 
-Dashboard executivo e operacional para acompanhamento de **Quebra de Agenda** e **Aderência ao Checklist**, desenvolvido em HTML único, responsivo e interativo.
+Dashboard executivo e operacional para acompanhamento de **Quebra**, **Antiquebra** e **Conversão**, desenvolvido em HTML responsivo e interativo para publicação no GitHub Pages.
 
-## Acesso ao dashboard
+## Acesso
 
-[**Abrir Dashboard de Quebra de Agenda**](https://mranderson2714.github.io/QuebraAgenda/)
+O painel é publicado pelo arquivo `index.html` do repositório. Após habilitar o GitHub Pages, utilize a URL gerada para o projeto.
 
-> Link direto: https://mranderson2714.github.io/QuebraAgenda/
+## Bases de dados
 
----
-
-## Visão geral
-
-O painel consolida informações geográficas, comerciais e operacionais para identificar os principais ofensores, causas de baixa, equipes, canais e logins de vendedores que demandam atuação.
-
-O dashboard relaciona três conjuntos de dados do arquivo `IND_QUEBRA.xlsx`:
-
-- **CIDADES**: cadastro geográfico por código IBGE;
-- **CONTRATOS**: canal, equipe e login do vendedor;
-- **QUEBRA**: agenda, quebra, checklist, tipo de OS e causa de baixa.
-
-O relacionamento principal entre as bases comerciais e operacionais utiliza:
+O dashboard lê os arquivos abaixo na mesma pasta do HTML:
 
 ```text
-NR_SOLICITACAO + IBGE
+index.html
+quebra.json ou quebra.json.gz
+nd.json ou nd.json.gz
+ibge.json ou ibge.json.gz
+metas.json
+README.md
 ```
 
-Quando publicado no GitHub Pages, o dashboard procura automaticamente o arquivo `IND_QUEBRA.xlsx` na mesma pasta do HTML.
+- `quebra.json`: dados de Quebra e Antiquebra;
+- `nd.json`: dados de Conversão e Linha de Negócio;
+- `ibge.json`: enriquecimento geográfico;
+- `metas.json`: metas dos indicadores.
 
----
+O carregamento utiliza primeiro a versão `.json.gz` e, caso não esteja disponível, tenta o arquivo `.json`.
 
-## Indicadores
+## Abas do dashboard
 
-### IND Quebra
+### Quebra
+
+Apresenta rotas, quebras, percentual de quebra, ADE Checklist, recuperação necessária, evolução temporal, Pareto de motivos, análise por hierarquia e heatmap por código de reagendamento.
+
+Principais fórmulas:
 
 ```text
-IND Quebra = SUM(QUEBRA) / SUM(TOTAL)
+% Quebra = SUM(QB) / SUM(RT)
+ADE Checklist = SUM(D1) / SUM(RT)
+Recuperação = MAX(0, CEILING(SUM(QB) - Meta × SUM(RT)))
 ```
 
-**Meta:** menor ou igual a **20%**.
+### Antiquebra
 
-Faixas:
-
-- `0% a 20%`: verde;
-- `acima de 20% a 25%`: amarelo;
-- `acima de 25%`: vermelho.
-
-### ADE Checklist
+Acompanha registros, itens tratados, revertidos, aderência elegível e volume não tratado.
 
 ```text
-ADE Checklist = SUM(N) / SUM(TOTAL)
+% Tratadas = SUM(AT_TRAT) / SUM(AQ_REG)
+% Revertidas = SUM(AQ_REV) / SUM(AQ_REG)
+Aderência = SUM(AQ_REG elegível) / SUM(AQ_ADE)
 ```
 
-- `N = 1`: aderente ao checklist;
-- `N = 0`: não aderente ao checklist.
+### Conversão
 
-**Meta:** maior ou igual a **80%**.
-
-### Recuperação
+Apresenta os indicadores e volumes de Venda Bruta, Venda Líquida, Desistência, Instalações e Instalações em até três dias.
 
 ```text
-Recuperação = MAX(0, CEILING(SUM(QUEBRA) - 20% × SUM(TOTAL)))
+Conversão Bruta = SUM(INS) / SUM(VB)
+Conversão Líquida = (SUM(INS) - SUM(DES)) / SUM(VB)
+Desistência = SUM(DES) / SUM(VB)
+Instalação 3D = SUM(INS_3D) / SUM(INS)
 ```
-
-Representa a quantidade estimada de agendas que precisam deixar de quebrar para o indicador retornar à meta.
-
----
-
-## Recursos do dashboard
-
-### Cards executivos
-
-- Atualização da base;
-- IND Quebra;
-- ADE Checklist;
-- Total de agendas;
-- Total de quebras;
-- comparativos D-1 e D-7;
-- volumes necessários para recuperação das metas.
-
-### Gráfico Quebra x ADE Checklist
-
-- visão por Dia, Semana ou Mês;
-- semana de domingo a sábado;
-- metas de 20% e 80%;
-- comparação com o período anterior;
-- detalhamento dos principais canais em tooltip.
-
-### Pareto de Causa Raiz
-
-- ranking por `COD_BAIXA` e `DSC_BAIXA`;
-- quantidade de quebras;
-- participação da causa;
-- distribuição por Grupo de Canais.
-
-### Analítico por Hierarquia
-
-Hierarquias disponíveis:
-
-- UF;
-- Cluster;
-- Cidade;
-- Segmento do Município;
-- Equipe de Vendas;
-- Canal de Venda Subgrupo;
-- Canal de Venda Grupo.
-
-Métricas:
-
-- Total;
-- Quebras;
-- Recuperação;
-- IND Quebra;
-- ADE Checklist.
-
-O tooltip apresenta os indicadores e os últimos 20 dias disponíveis para cada item.
-
-### P&R: Análise Crítica
-
-A análise automática considera:
-
-- situação e tendência dos indicadores;
-- relação entre checklist e quebra;
-- principais causas raiz;
-- áreas prioritárias;
-- volume necessário para recuperação;
-- Top 5 logins de vendedores por volume de quebra;
-- equipe e canal predominantes;
-- principais `DSC_BAIXA` por login;
-- alerta de registros sem login identificado.
-
----
 
 ## Filtros
 
-- Grupo;
-- UF;
-- Cluster;
-- Cidade;
-- Ano/Mês;
-- intervalo de datas;
-- Grupo OS;
-- Tipo OS;
-- Novo Domicílio;
-- Grupo de Canais;
-- Canal Grupo.
+Os filtros geográficos e comerciais afetam todas as abas compatíveis. O painel inclui filtros de competência, intervalo de datas, regional, UF, cluster, subcluster, município, canal, grupo, subgrupo, equipe e vendedor.
 
-Todos os KPIs, gráficos, tabelas, análises e exportações respeitam os filtros ativos.
+O filtro **Linha Negócio** utiliza o campo `NM_LINHA_NEGOCIO` do `nd.json` e atua somente na aba Conversão. A configuração inicial é:
 
-### Agrupamento de canais
+- BSOD: desmarcado;
+- CLARO EMPRESAS: marcado;
+- HOTEL E HOSPITAL: marcado;
+- RESIDENCIAL: marcado.
 
-| Grupo | Canais incluídos |
-|---|---|
-| AA | Agente Autorizado |
-| PAP | Porta Porta Exclusivo e Porta Porta Indireto |
-| Lojas | Lojas Próprias |
-| Remotos | Ativo, Canais Eletrônicos, DAC e Receptivo |
-| Varejo | Varejo |
-| PME | Canais Exclusivos Empresas |
-| Outros | Demais canais |
+## Recursos
 
----
+- agrupamento por dia, semana ou mês;
+- KPIs com metas e comparativos;
+- tooltips detalhados;
+- rótulos de percentuais e volumes nos gráficos;
+- Pareto de códigos de reagendamento;
+- heatmap por hierarquia e motivo;
+- busca e ordenação nas tabelas;
+- exportação CSV, PNG e HTML;
+- modo claro e escuro;
+- detalhamento por clique nas linhas das tabelas;
+- indicadores e metas carregados pelo `metas.json`.
 
-## Exportações
+## Publicação no GitHub Pages
 
-### PNG
+1. Mantenha todos os arquivos na mesma pasta do repositório.
+2. Use `index.html` como página principal.
+3. Ative o GitHub Pages nas configurações do repositório.
+4. Após atualizar os arquivos, aguarde a publicação e recarregue a página com `Ctrl + F5`.
 
-Exemplos:
-
-```text
-Dashboard_Quebra_Agenda_v3.png
-Dashboard_Quebra_Agenda_v3_AA.png
-Dashboard_Quebra_Agenda_v3_PAP.png
-Dashboard_Quebra_Agenda_v3_PME.png
-```
-
-### XLSX
-
-A exportação do Analítico por Hierarquia respeita período, filtros, pesquisa e ordenação.
-
-Exemplos:
-
-```text
-Analitico_Indicador_Cidade.xlsx
-Analitico_Indicador_Cidade_PAP.xlsx
-Analitico_Indicador_Equipe_de_Vendas_PME.xlsx
-```
-
-### HTML
-
-O botão **Baixar HTML** gera uma nova cópia do painel com a base mais recente incorporada.
-
----
-
-## Estrutura do repositório
-
-```text
-/
-├── index.html
-├── IND_QUEBRA.xlsx
-└── README.md
-```
-
-O caminho de leitura configurado no dashboard é:
-
-```javascript
-const REPO_EXCEL_PATH = "./IND_QUEBRA.xlsx";
-```
-
-O HTML e o Excel devem permanecer na mesma pasta.
-
----
-
-## Atualização da base
-
-1. Substitua `IND_QUEBRA.xlsx` no repositório.
-2. Preserve o nome, as guias e os cabeçalhos esperados.
-3. Confirme o commit da nova versão.
-4. Atualize a página com `F5` ou use **Atualizar do repositório**.
-
-Se a atualização remota falhar, o painel mantém a última base disponível na sessão ou utiliza a base incorporada ao HTML.
-
----
-
-## Estrutura mínima do Excel
-
-### CIDADES
-
-```text
-CD_IBGE
-NM_GRUPO
-UF
-NM_CLUSTER
-NM_CIDADE
-NM_SEGMENTO_MUNICIPIO
-```
-
-### CONTRATOS
-
-```text
-DT
-NR_SOLICITACAO
-NM_EQUIPE_VENDA
-NM_CANAL_VENDA_SUBGRUPO
-NM_CANAL_VENDA_GRUPO
-CD_LOGIN_VENDEDOR
-COD_MUNICIPIO
-QT
-```
-
-### QUEBRA
-
-```text
-NR_SOLICITACAO
-ID_TIPO_OS
-TIPO_OS
-CD_IBGE
-DT_AGENDA
-NR_CONTRATO
-NM_NOVO_DOMICILIO
-COD_BAIXA
-DSC_BAIXA
-GRUPO_OS
-QUEBRA
-TOTAL
-N
-```
-
----
-
-## Tecnologias
-
-- HTML5;
-- CSS responsivo;
-- JavaScript;
-- SheetJS/XLSX;
-- html2canvas;
-- SVG;
-- armazenamento local do navegador.
-
----
+Arquivos maiores que 100 MB podem exigir compactação `.gz` ou Git LFS. A opção recomendada para as bases maiores é manter `quebra.json.gz` e `nd.json.gz` no repositório.
 
 ## Execução local
+
+Execute um servidor HTTP na pasta do projeto:
 
 ```bash
 python -m http.server 8000
@@ -293,22 +109,17 @@ Acesse:
 http://localhost:8000
 ```
 
----
+A abertura direta pelo protocolo `file://` pode bloquear a leitura dos arquivos JSON.
 
-## Segurança e privacidade
+## Tecnologias
 
-A base pode conter informações operacionais e identificadores internos. Recomenda-se:
+- HTML5 e CSS responsivo;
+- JavaScript;
+- Chart.js e chartjs-plugin-datalabels;
+- Pako para arquivos GZIP;
+- html2canvas;
+- SheetJS.
 
-- utilizar repositório privado ou GitHub Enterprise;
-- controlar permissões de acesso;
-- revisar os dados antes da publicação;
-- anonimizar logins em compartilhamentos externos;
-- evitar a publicação de dados sensíveis em repositórios públicos.
+## Segurança
 
----
-
-## Versão
-
-**Dashboard de Quebra de Agenda v3**
-
-Acesso: [https://mranderson2714.github.io/QuebraAgenda/](https://mranderson2714.github.io/QuebraAgenda/)
+As bases podem conter informações operacionais e identificadores internos. Utilize repositório privado ou GitHub Enterprise, controle as permissões e revise os dados antes de qualquer publicação externa.
