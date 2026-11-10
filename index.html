@@ -111,58 +111,9 @@ const metas={qb:.20,ade:.80,aat:.80,arev:.20,aader:.95,gross:.80,net:.98,des:.17
 const aliases={DSC_GRUPO_REGIONAL_BI:'Regional',DSC_SEGM_MUNICIPIO_ORI:'Segmento Município',DSC_SEGM_MUNICIPIO:'Tecnologia',DSC_SGL_ESTADO:'UF',CAPITAIS_BI:'Capital',DSC_CLUSTER_BI:'Cluster',DSC_SUBCLUSTER_BI:'Subcluster',DSC_MUNICIPIO_BI:'Município',DS_PERIODO_AGENDA:'Janela',NM_CANAL_VENDA:'Canal de venda',NM_CANAL_VENDA_GRUPO:'Grupo Canal',NM_CANAL_VENDA_SUBGRUPO:'Subgrupo Canal',NM_EQUIPE_VENDA:'Parceira',CD_LOGIN_VENDEDOR:'Login Vendedor',HR_REAG:'Hora reagendamento'};
 const hier=Object.keys(aliases), filters=[['DSC_GRUPO_REGIONAL_BI','Grupo Regional'],['DSC_SGL_ESTADO','UF'],['DSC_CLUSTER_BI','Cluster'],['DSC_SUBCLUSTER_BI','Subcluster'],['DSC_MUNICIPIO_BI','Cidade'],['DSC_SEGM_MUNICIPIO_ORI','Segmento Município'],['DSC_SEGM_MUNICIPIO','Tecnologia'],['CAPITAIS_BI','Capital'],['NM_CANAL_VENDA_GRUPO','Canal Grupo'],['NM_CANAL_VENDA_SUBGRUPO','Canal Subgrupo'],['NM_CANAL_VENDA','Canal Venda'],['NM_EQUIPE_VENDA','Equipe Venda']];
 function esc(s){return String(s??'Não informado').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}function div(a,b){return b?a/b:0}function sum(r,k){return r.reduce((a,x)=>a+(+x[k]||0),0)}function pct(v){return pf.format(isFinite(v)?v:0)}function num(v){return nf.format(Math.round(v||0))}
-async function parseJsonArrayStream(response,name){
-  if(!response.body||!response.body.getReader)throw Error('Leitura em fluxo não suportada neste navegador');
-  const reader=response.body.getReader(),decoder=new TextDecoder();
-  const rows=[];let buffer='',started=false,depth=0,inString=false,escaped=false,objStart=-1,bytes=0;
-  const consume=(final=false)=>{
-    let safeCut=0;
-    for(let i=0;i<buffer.length;i++){
-      const ch=buffer[i];
-      if(!started){if(/\s/.test(ch)||ch==='[')continue;started=true}
-      if(objStart<0){if(ch==='{'){objStart=i;depth=1;inString=false;escaped=false}else if(ch===']')safeCut=i+1;continue}
-      if(inString){if(escaped)escaped=false;else if(ch==='\\')escaped=true;else if(ch==='"')inString=false}
-      else if(ch==='"')inString=true;
-      else if(ch==='{')depth++;
-      else if(ch==='}'&&--depth===0){rows.push(JSON.parse(buffer.slice(objStart,i+1)));objStart=-1;safeCut=i+1}
-    }
-    if(safeCut>0){buffer=buffer.slice(safeCut);if(objStart>=0)objStart-=safeCut}
-    if(final&&buffer.trim()&&!/^\s*]\s*$/.test(buffer))throw Error(`${name} contém JSON incompleto ou inválido`);
-  };
-  while(true){
-    const {value,done}=await reader.read();if(done)break;
-    bytes+=value.byteLength;buffer+=decoder.decode(value,{stream:true});consume();
-    if(bytes%(16*1024*1024)<value.byteLength)$('loadStatus').textContent=`Carregando ${name}.json: ${num(rows.length)} registros lidos...`;
-  }
-  buffer+=decoder.decode();consume(true);return rows;
-}
-function extractRows(parsed,f){
-  const rows=Array.isArray(parsed)?parsed:(Array.isArray(parsed?.data)?parsed.data:(Array.isArray(parsed?.rows)?parsed.rows:(Array.isArray(parsed?.records)?parsed.records:null)));
-  if(!rows)throw Error(`${f} não contém uma lista de registros`);return rows;
-}
-async function loadOne(name){
-  let lastError;
-  for(const f of [`./${name}.json`,`./${name}.json.gz`]){try{
-    const r=await fetch(f+'?v='+Date.now(),{cache:'no-store'});if(!r.ok)continue;
-    if(!f.endsWith('.gz'))return await parseJsonArrayStream(r,name);
-    const b=await r.arrayBuffer(),txt=new TextDecoder().decode(pako.ungzip(new Uint8Array(b)));
-    return extractRows(JSON.parse(txt),f);
-  }catch(e){lastError=e}}
-  throw Error(`Não foi possível carregar ${name}.json ou ${name}.json.gz${lastError?.message?`: ${lastError.message}`:''}`)
-}
-function geoJoin(rows,key){
-  const fallback={DSC_GRUPO_REGIONAL_BI:'Não mapeado',DSC_SGL_ESTADO:'NI',DSC_CLUSTER_BI:'Não mapeado',DSC_SUBCLUSTER_BI:'Não mapeado',DSC_MUNICIPIO_BI:'Não mapeado',DSC_SEGM_MUNICIPIO_ORI:'Não mapeado',DSC_SEGM_MUNICIPIO:'Não mapeado',CAPITAIS_BI:'Não mapeado'};
-  for(const x of rows)Object.assign(x,state.geo.get(String(x[key]))||fallback);return rows;
-}
-async function load(){try{
-  $('loadStatus').textContent='Carregando cadastro geográfico...';
-  const g=await loadOne('ibge');state.geo=new Map(g.map(x=>[String(x.COD_IBGE),x]));
-  $('loadStatus').textContent='Carregando base de quebras sem limite de registros...';
-  const q=await loadOne('quebra');state.q=geoJoin(q,'CD_IBGE');
-  $('loadStatus').textContent='Carregando base de conversão sem limite de registros...';
-  const n=await loadOne('nd');state.n=geoJoin(n,'COD_IBGE');
-  setup();apply();$('loadStatus').textContent=`✓ ${num(q.length)} registros de quebra e ${num(n.length)} registros de conversão. Atualizado até ${latestDate()}.`;
-}catch(e){$('loadStatus').className='status error';$('loadStatus').textContent='Erro: '+e.message+`${location.protocol==='file:'?' Abra por servidor local (ex.: npx serve ou python -m http.server).':''}. Publique este HTML junto de quebra.json(.gz), nd.json(.gz), ibge.json(.gz) e metas.json em um servidor HTTP/GitHub Pages.`}}
+async function loadOne(name){for(const f of [`./${name}.json.gz`,`./${name}.json`]){try{const r=await fetch(f+'?v='+Date.now(),{cache:'no-store'});if(!r.ok)continue;const b=await r.arrayBuffer();const txt=f.endsWith('.gz')?new TextDecoder().decode(pako.ungzip(new Uint8Array(b))):new TextDecoder().decode(b);const parsed=JSON.parse(txt);const rows=Array.isArray(parsed)?parsed:(Array.isArray(parsed?.data)?parsed.data:(Array.isArray(parsed?.rows)?parsed.rows:(Array.isArray(parsed?.records)?parsed.records:null)));if(!rows)throw Error(`${f} não contém uma lista de registros`);return rows}catch(e){}}throw Error(`Não foi possível carregar ${name}.json.gz ou ${name}.json`)}
+function geoJoin(rows,key){return rows.map(x=>Object.assign({},state.geo.get(String(x[key]))||{DSC_GRUPO_REGIONAL_BI:'Não mapeado',DSC_SGL_ESTADO:'NI',DSC_CLUSTER_BI:'Não mapeado',DSC_SUBCLUSTER_BI:'Não mapeado',DSC_MUNICIPIO_BI:'Não mapeado',DSC_SEGM_MUNICIPIO_ORI:'Não mapeado',DSC_SEGM_MUNICIPIO:'Não mapeado',CAPITAIS_BI:'Não mapeado'},x))}
+async function load(){try{$('loadStatus').textContent='Carregando cadastro geográfico e bases operacionais...';const [g,q,n]=await Promise.all([loadOne('ibge'),loadOne('quebra'),loadOne('nd')]);state.geo=new Map(g.map(x=>[String(x.COD_IBGE),x]));state.q=geoJoin(q,'CD_IBGE');state.n=geoJoin(n,'COD_IBGE');setup();apply();$('loadStatus').textContent=`✓ ${num(q.length)} registros de quebra e ${num(n.length)} registros de conversão. Atualizado até ${latestDate()}.`; }catch(e){$('loadStatus').innerHTML=`<b>Falha no carregamento:</b> ${esc(e.message)}${e.stack?`<br><small>${esc(e.stack.split('\n').slice(0,2).join(' | '))}</small>`:''}. Publique este HTML junto de quebra.json.gz, nd.json.gz e ibge.json.gz em um servidor HTTP/GitHub Pages.`}}
 function latestDate(){const ds=[...state.q.map(x=>x.DT_AGENDA),...state.n.map(x=>x.DT)].filter(Boolean).sort();return ds.length?new Date(ds.at(-1)+'T12:00:00').toLocaleDateString('pt-BR'):'Sem dados'}
 function setup(){const months=[...new Set([...state.q.map(x=>x.ANOMES),...state.n.map(x=>x.ANOMES)])].sort();$('fMonth').innerHTML=months.map(x=>`<option value="${x}">${String(x).slice(4)}/${String(x).slice(0,4)}</option>`).join('');const dates=[...state.q.map(x=>x.DT_AGENDA),...state.n.map(x=>x.DT)].filter(Boolean).sort();$('fStart').value=dates[0]||'';$('fEnd').value=dates.at(-1)||'';$('filters').innerHTML=filters.map(([k,l])=>`<div class="filter"><label>${l}<span title="Filtro global por ${l}">ⓘ</span></label><select id="f_${k}" multiple data-key="${k}"></select></div>`).join('');populateFilters();const hierConversion=hier.filter(k=>!['DS_PERIODO_AGENDA','HR_REAG'].includes(k));$('hierQ').innerHTML=hier.map(k=>`<option value="${k}">${aliases[k]}</option>`).join('');$('hierA').innerHTML=hier.map(k=>`<option value="${k}">${aliases[k]}</option>`).join('');$('hierC').innerHTML=hierConversion.map(k=>`<option value="${k}">${aliases[k]}</option>`).join('');$('hierQ').value=state.hierQ;$('hierA').value=state.hierA;$('hierC').value=state.hierC;const lbs=[...new Set(state.n.map(x=>x.NM_LINHA_NEGOCIO).filter(Boolean))].sort();$('lineBusiness').innerHTML+=$$('noop');$('lineBusiness').innerHTML='<option value="">Todas as linhas</option>'+lbs.map(x=>`<option>${esc(x)}</option>`).join('');document.querySelectorAll('select[multiple],input[type=date]').forEach(x=>x.onchange=apply);filters.forEach(([k])=>$(`f_${k}`).onchange=apply);}
 function $$(x){return ''}
