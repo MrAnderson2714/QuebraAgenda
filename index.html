@@ -802,34 +802,17 @@ setup=function(){
 };
 
 
-// ===== Correcao exclusiva: recarga segura e ordenacao cronologica =====
-function ensureReloadRequiredElements(){
-  if(!$('lineBusiness')){
-    const hidden=document.createElement('select');
-    hidden.id='lineBusiness';
-    hidden.style.display='none';
-    hidden.setAttribute('aria-hidden','true');
-    document.body.appendChild(hidden);
-  }
-}
-ensureReloadRequiredElements();
-
-// Mantem os agrupamentos na ordem real das datas da base.
-group=function(rows,dateKey,g,agg){
-  const buckets=new Map();
-  rows.forEach(r=>{
-    const date=String(r[dateKey]||'');
-    if(!date)return;
-    const key=period(date,g);
-    if(!buckets.has(key))buckets.set(key,{rows:[],firstDate:date});
-    const bucket=buckets.get(key);
-    bucket.rows.push(r);
-    if(date<bucket.firstDate)bucket.firstDate=date;
-  });
-  return [...buckets.entries()]
-    .sort((a,b)=>a[1].firstDate.localeCompare(b[1].firstDate))
-    .map(([key,bucket])=>[key,agg(bucket.rows)]);
-};
+// ===== Correcao restrita: recarga segura sem limitar registros JSON =====
+// O setup legado ainda referencia lineBusiness. O controle visual atual e lineBusinessSide;
+// este elemento tecnico evita falha na recarga sem alterar filtros, paineis ou renderizadores.
+(function ensureLegacyLineBusinessElement(){
+  if(document.getElementById('lineBusiness'))return;
+  const el=document.createElement('select');
+  el.id='lineBusiness';
+  el.hidden=true;
+  el.setAttribute('aria-hidden','true');
+  document.body.appendChild(el);
+})();
 
 load();
 </script></body></html>
