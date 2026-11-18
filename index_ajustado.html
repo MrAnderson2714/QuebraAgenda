@@ -802,92 +802,90 @@ setup=function(){
 };
 
 
-// ===== Ajustes solicitados 18/11/2026 =====
-// Remove a 4a coluna da tabela de Quebra e preserva as demais colunas.
+// ===== Ajustes pontuais solicitados =====
+function removeTableQFourthColumn(){
+  const table=$('tableQ');
+  if(!table)return;
+  table.querySelectorAll('tr').forEach(tr=>{if(tr.children[3])tr.children[3].remove()});
+}
+
+// Remove a antiga coluna "Hora Reagendamento" sem alterar as demais colunas.
 renderTableQ=function(){
   let data=grouped(state.fq,state.hierQ,aggQ);
   const search=$('searchQ').value.toLowerCase();
   const rtRecorte=aggQ(state.fq).rt;
   if(search)data=data.filter(x=>String(x.k).toLowerCase().includes(search));
   data.sort((x,y)=>y.a.iq-x.a.iq);
-  table($('tableQ'),['Hierarquia','Rota','Quebras','Recuperacao','IND Quebra','DIST Quebra','ADE Checklist'],data.slice(0,500).map(x=>`<tr><td>${esc(x.k)}</td><td>${num(x.a.rt)}</td><td>${num(x.a.qb)}</td><td>${num(Math.max(0,Math.ceil(x.a.qb-metas.qb*x.a.rt)))}</td><td><span class="pill ${x.a.iq<=metas.qb?'good':'bad'}">${pct(x.a.iq)}</span></td><td>${pct(div(x.a.qb,rtRecorte))}</td><td><span class="pill ${x.a.iad>=metas.ade?'good':'bad'}">${pct(x.a.iad)}</span></td></tr>`));
+  table($('tableQ'),['Hierarquia','Rota','Quebras','Recuperação','IND Quebra','DIST Quebra','ADE Checklist'],data.slice(0,500).map(x=>`<tr><td>${esc(x.k)}</td><td>${num(x.a.rt)}</td><td>${num(x.a.qb)}</td><td>${num(Math.max(0,Math.ceil(x.a.qb-metas.qb*x.a.rt)))}</td><td><span class="pill ${x.a.iq<=metas.qb?'good':'bad'}">${pct(x.a.iq)}</span></td><td>${pct(div(x.a.qb,rtRecorte))}</td><td><span class="pill ${x.a.iad>=metas.ade?'good':'bad'}">${pct(x.a.iad)}</span></td></tr>`));
 };
 
-// Remove também a coluna existente no HTML salvo, antes do primeiro carregamento.
-(function removeFourthBreakColumn(){
-  const t=$('tableQ');
-  if(!t)return;
-  t.querySelectorAll('tr').forEach(tr=>{if(tr.children[3])tr.children[3].remove()});
-})();
-
-// Tooltips: indicadores fracionários são apresentados em percentual, nunca em decimal.
-if(typeof Chart!=='undefined'){
-  Chart.defaults.plugins.tooltip.callbacks.label=function(ctx){
-    const label=ctx.dataset?.label||'';
-    const raw=Number(ctx.raw);
-    const isIndicator=ctx.dataset?.yAxisID!=='yr' && (/[%]|indicador|meta|quebra|ade|tratad|revertid|ader.ncia|convers|desist|instala..o 3/i.test(label));
-    if(Number.isFinite(raw)&&isIndicator)return `${label}: ${pct(raw)}`;
-    return `${label}: ${Number.isFinite(raw)?num(raw):ctx.formattedValue}`;
-  };
+function selectedConversionMetricLabel(){
+  const el=$('metricC');
+  return el?.selectedOptions?.[0]?.textContent?.trim()||'Venda Bruta';
 }
 
-// Mantém o detalhamento existente, ajustando apenas as solicitações da frame/modal.
+function isPercentIndicatorDataset(dataset){
+  const label=String(dataset?.label||'').toLowerCase();
+  return label.includes('%')||label.includes('indicador')||label.includes('meta')||label.includes('ade')||label.includes('tratad')||label.includes('revertid')||label.includes('aderência')||label.includes('aderencia')||label.includes('convers')||label.includes('desist')||label.includes('instalação 3')||label.includes('instalacao 3');
+}
+
+// Garante percentual nos tooltips de séries indicadoras, preservando volumes como inteiros.
+const chartPercentTooltipBase=chart;
+chart=function(id,config){
+  config.options=config.options||{};
+  config.options.plugins=config.options.plugins||{};
+  const tooltip=config.options.plugins.tooltip=config.options.plugins.tooltip||{};
+  const callbacks=tooltip.callbacks=tooltip.callbacks||{};
+  if(!callbacks.label){
+    callbacks.label=c=>isPercentIndicatorDataset(c.dataset)?`${c.dataset.label}: ${pct(Number(c.raw)||0)}`:`${c.dataset.label}: ${num(Number(c.raw)||0)}`;
+  }
+  return chartPercentTooltipBase(id,config);
+};
+
 const requestedDetailBase=showDetail;
 showDetail=function(rows,key,item,type){
   requestedDetailBase(rows,key,item,type);
-
-  // Conversão: acrescenta ao título o indicador selecionado, por exemplo " | Venda Bruta".
   if(type==='n'){
-    const metric=$('metricC');
-    const selectedText=metric?.selectedOptions?.[0]?.textContent?.trim();
-    if(selectedText && !$('modalTitle').textContent.endsWith(' | '+selectedText)){
-      $('modalTitle').textContent+=' | '+selectedText;
-    }
+    $('modalTitle').textContent=`${aliases[key]||key}: ${item} | ${selectedConversionMetricLabel()}`;
+    return;
   }
+  if(type!=='a')return;
 
-  // Antiquebra: gráfico exclusivamente de linhas para Tratadas, Revertidas e Aderência.
-  if(type==='a'){
-    const source=Array.isArray(rows)?rows:[];
-    const detailRows=source.filter(x=>(x[key]||'Não informado')===item);
-    const g=group(detailRows,'DT_AGENDA','day',aggQ);
-    if(state.charts.modalChart)state.charts.modalChart.destroy();
-    state.charts.modalChart=new Chart($('modalChart'),{
-      type:'line',
-      data:{
-        labels:g.map(x=>x[0]),
-        datasets:[
-          {label:'Tratadas',data:g.map(x=>x[1].it),borderColor:'#0097A9',backgroundColor:'#0097A9',borderWidth:3,pointRadius:4,tension:.25,datalabels:{display:false}},
-          {label:'Revertidas',data:g.map(x=>x[1].ir),borderColor:'#DA291C',backgroundColor:'#DA291C',borderWidth:3,pointRadius:4,tension:.25,datalabels:{display:false}},
-          {label:'Aderência',data:g.map(x=>x[1].ia),borderColor:'#F5842B',backgroundColor:'#F5842B',borderWidth:3,pointRadius:4,tension:.25,datalabels:{display:false}}
-        ]
-      },
-      options:{
-        ...baseOpts,
-        plugins:{
-          ...baseOpts.plugins,
-          datalabels:{display:false},
-          tooltip:{
-            backgroundColor:'#202124',titleColor:'#fff',bodyColor:'#fff',padding:11,displayColors:true,
-            callbacks:{
-              label:c=>{
-                const a=g[c.dataIndex]?.[1]||aggQ([]);
-                const specs={
-                  'Tratadas':[a.it,a.trat,a.reg],
-                  'Revertidas':[a.ir,a.rev,a.reg],
-                  'Aderência':[a.ia,a.regAde,a.ade]
-                };
-                const [rate,vol,base]=specs[c.dataset.label]||[Number(c.raw)||0,0,0];
-                return `${c.dataset.label}: ${pct(rate)} | Volume: ${num(vol)} de ${num(base)}`;
-              }
+  const source=Array.isArray(rows)?rows:[];
+  const rr=source.filter(x=>(x[key]||'Não informado')===item);
+  const g=group(rr,'DT_AGENDA','day',aggQ);
+  if(state.charts.modalChart)state.charts.modalChart.destroy();
+  state.charts.modalChart=new Chart($('modalChart'),{
+    type:'line',
+    data:{
+      labels:g.map(x=>x[0]),
+      datasets:[
+        {label:'% Tratadas',data:g.map(x=>x[1].it),borderColor:'#0097A9',backgroundColor:'#0097A9',borderWidth:3,pointRadius:4,tension:.25,datalabels:{display:false}},
+        {label:'% Revertidas',data:g.map(x=>x[1].ir),borderColor:'#DA291C',backgroundColor:'#DA291C',borderWidth:3,pointRadius:4,tension:.25,datalabels:{display:false}},
+        {label:'% Aderência',data:g.map(x=>x[1].ia),borderColor:'#F5842B',backgroundColor:'#F5842B',borderWidth:3,pointRadius:4,tension:.25,datalabels:{display:false}}
+      ]
+    },
+    options:{
+      ...baseOpts,
+      plugins:{
+        ...baseOpts.plugins,
+        datalabels:{display:false},
+        tooltip:{
+          callbacks:{
+            label:c=>{
+              const a=g[c.dataIndex]?.[1]||aggQ([]);
+              const volume=c.datasetIndex===0?`${num(a.trat)} / ${num(a.reg)}`:c.datasetIndex===1?`${num(a.rev)} / ${num(a.reg)}`:`${num(a.regAde)} / ${num(a.ade)}`;
+              return [`${c.dataset.label}: ${pct(Number(c.raw)||0)}`,`Volume: ${volume}`];
             }
           }
-        },
-        scales:{...baseOpts.scales,y:{...baseOpts.scales.y,ticks:{callback:v=>pct(v)},beginAtZero:true}}
+        }
       },
-      plugins:[ChartDataLabels]
-    });
-  }
+      scales:{...baseOpts.scales,y:{...baseOpts.scales.y,ticks:{callback:pct},suggestedMin:0,suggestedMax:1}}
+    },
+    plugins:[ChartDataLabels]
+  });
 };
 
+removeTableQFourthColumn();
 load();
 </script></body></html>
