@@ -807,5 +807,86 @@ setup=function(){
   if(side)side.onchange=apply;
 };
 
-load();
+
+// ===== Ajustes solicitados para homologacao GitHub =====
+// 1) Remove a coluna Hora Reagendamento da tabela de Quebra.
+renderTableQ=function(){
+  let data=grouped(state.fq,state.hierQ,aggQ);
+  const search=$('searchQ').value.toLowerCase();
+  const rtRecorte=aggQ(state.fq).rt;
+  if(search)data=data.filter(x=>String(x.k).toLowerCase().includes(search));
+  data.sort((x,y)=>y.a.iq-x.a.iq);
+  table($('tableQ'),['Hierarquia','Rota','Quebras','Recuperacao','IND Quebra','DIST Quebra','ADE Checklist'],data.slice(0,500).map(x=>`<tr><td>${esc(x.k)}</td><td>${num(x.a.rt)}</td><td>${num(x.a.qb)}</td><td>${num(Math.max(0,Math.ceil(x.a.qb-metas.qb*x.a.rt)))}</td><td><span class="pill ${x.a.iq<=metas.qb?'good':'bad'}">${pct(x.a.iq)}</span></td><td>${pct(div(x.a.qb,rtRecorte))}</td><td><span class="pill ${x.a.iad>=metas.ade?'good':'bad'}">${pct(x.a.iad)}</span></td></tr>`));
+};
+
+// Padrao de tooltip: indicadores sempre em percentual, volumes em numero inteiro.
+function isPercentDataset(dataset){
+  const label=String(dataset?.label||'').toLowerCase();
+  return dataset?.yAxisID!=='yr' && /%|ade|meta|indicador|tratad|revertid|ader.ncia|convers|desist|instala..o 3|participa/.test(label);
+}
+const tooltipPercentDefault={
+  callbacks:{
+    label(context){
+      const label=context.dataset?.label?context.dataset.label+': ':'';
+      const raw=Number(context.raw);
+      if(!Number.isFinite(raw))return label+String(context.formattedValue??'');
+      return label+(isPercentDataset(context.dataset)?pct(raw):num(raw));
+    }
+  }
+};
+baseOpts.plugins.tooltip=tooltipPercentDefault;
+
+// 2 e 3) Modal Antiquebra com tres linhas, sem rotulos, tooltips em % e volume;
+// titulo da Conversao recebe o indicador selecionado, por exemplo " | Venda Bruta".
+showDetail=function(rows,key,item,type){
+  const source=Array.isArray(rows)?rows:[],rr=source.filter(x=>(x[key]||'Nao informado')===item),isN=type==='n',isA=type==='a',a=isN?aggN(rr):aggQ(rr);
+  const selectedMetric=$('metricC');
+  const metricName=selectedMetric?.options?.[selectedMetric.selectedIndex]?.text||'Venda Bruta';
+  $('modalTitle').textContent=`${aliases[key]||key}: ${item}${isN?' | '+metricName:''}`;
+
+  if(isA)$('modalKpis').innerHTML=kpiCard('Registradas',num(a.reg),null,0,false,'Volume registrado')+modalKpi('Tratadas',a.it,a.trat,metas.aat)+modalKpi('Revertidas',a.ir,a.rev,metas.arev)+modalKpi('Aderencia',a.ia,a.regAde,metas.aader)+kpiCard('Volume nao tratadas',num(a.ntrat),null,0,false,'Backlog');
+  else if(isN)$('modalKpis').innerHTML=modalKpi('% Venda Bruta',a.gross,a.vb,metas.gross)+modalKpi('% Venda Liquida',a.net,a.vl,metas.net)+modalKpi('% Desistencia',a.ides,a.des,metas.des,true)+modalKpi('% Instalacoes 3D',a.i3,a.ins3,metas.ins3)+kpiCard('Instalacoes',num(a.ins),null,0,false,'Volume total');
+  else $('modalKpis').innerHTML=kpiCard('Rota',num(a.rt),null,0)+kpiCard('Quebra',num(a.qb),a.iq,metas.qb,true)+kpiCard('% Quebra',pct(a.iq),a.iq,metas.qb,true)+kpiCard('ADE Checklist',pct(a.iad),a.iad,metas.ade);
+
+  const dateKey=isN?'DT':'DT_AGENDA',ag=isN?aggN:aggQ,g=group(rr,dateKey,'day',ag);
+  if(state.charts.modalChart)state.charts.modalChart.destroy();
+  let datasets,scales,tooltip;
+
+  if(isA){
+    datasets=[
+      {type:'line',label:'% Tratadas',data:g.map(x=>x[1].it),borderColor:'#0097A9',backgroundColor:'#0097A9',borderWidth:3,pointRadius:4,pointBackgroundColor:'#0097A9',tension:.25,datalabels:{display:false}},
+      {type:'line',label:'% Revertidas',data:g.map(x=>x[1].ir),borderColor:'#DA291C',backgroundColor:'#DA291C',borderWidth:3,pointRadius:4,pointBackgroundColor:'#DA291C',tension:.25,datalabels:{display:false}},
+      {type:'line',label:'% Aderencia',data:g.map(x=>x[1].ia),borderColor:'#F5842B',backgroundColor:'#F5842B',borderWidth:3,pointRadius:4,pointBackgroundColor:'#F5842B',tension:.25,datalabels:{display:false}}
+    ];
+    scales={x:baseOpts.scales.x,y:{beginAtZero:true,ticks:{callback:pct}}};
+    tooltip={backgroundColor:'#202124',titleColor:'#fff',bodyColor:'#fff',padding:11,callbacks:{
+      label(c){
+        const z=g[c.dataIndex]?.[1]||aggQ([]);
+        const info=c.datasetIndex===0?[z.it,z.trat,z.reg]:c.datasetIndex===1?[z.ir,z.rev,z.reg]:[z.ia,z.regAde,z.ade];
+        return `${c.dataset.label}: ${pct(info[0])} | Volume: ${num(info[1])} de ${num(info[2])}`;
+      }
+    }};
+  }else if(isN){
+    const metric=$('metricC').value,vals=g.map(x=>metricC(x[1],metric)),maxV=Math.max(0,...vals.map(x=>Number(x[0])||0));
+    datasets=[
+      {type:'bar',order:3,label:'Volume',data:vals.map(x=>x[0]),backgroundColor:vals.map(x=>x[0]===maxV&&maxV>0?'#159957':'#A7A8AA'),yAxisID:'yr',datalabels:{display:true,formatter:num,color:'#fff'}},
+      {type:'line',order:1,label:metricName,data:vals.map(x=>x[1]),borderColor:'#111111',borderWidth:2,pointRadius:4,yAxisID:'y',datalabels:{display:false}},
+      {type:'line',order:2,label:'Meta',data:vals.map(x=>x[2]),borderColor:'#F5842B',borderDash:[5,5],pointRadius:0,yAxisID:'y',datalabels:{display:false}}
+    ];
+    scales={x:baseOpts.scales.x,y:{ticks:{callback:pct}},yr:{position:'right',grid:{drawOnChartArea:false},ticks:{callback:num}}};
+    tooltip=cTooltipConfig(g,vals,metric);
+  }else{
+    datasets=[
+      {type:'bar',label:'% Quebra',data:g.map(x=>x[1].iq),backgroundColor:g.map(x=>x[1].iq<=metas.qb?'#159957':'#d7352a'),datalabels:{display:false}},
+      {type:'line',label:'ADE Checklist',data:g.map(x=>x[1].iad),borderColor:'#0097A9',borderWidth:3,pointRadius:4,datalabels:{display:false}}
+    ];
+    scales={...baseOpts.scales,y:{ticks:{callback:pct}}};
+    tooltip=detailQTooltip(g,g.map(x=>x[0]),rr);
+  }
+
+  state.charts.modalChart=new Chart($('modalChart'),{data:{labels:g.map(x=>x[0]),datasets},options:{...baseOpts,plugins:{...baseOpts.plugins,tooltip},scales},plugins:[ChartDataLabels]});
+  $('detailModal').classList.add('open');document.body.style.overflow='hidden';
+};
+
+load();  
 </script></body></html>
